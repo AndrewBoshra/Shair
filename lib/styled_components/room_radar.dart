@@ -2,12 +2,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 
 const _kBallRadius = 40.0;
-const _kFriction = 0;
+const _kFriction = 6;
 double magnitude(num dx, num dy) {
   return sqrt(pow(dy, 2) + pow(dx, 2));
 }
@@ -64,7 +66,7 @@ class Ball {
     }
   }
 
-  bool get isMoving => vel.dx > 0 && vel.dy > 0;
+  bool get isMoving => vel.dx.abs() > 0 && vel.dy.abs() > 0;
   Widget get widget => Positioned(
         child: GestureDetector(
           onPanUpdate: (d) => onPanUpdate?.call(this, d),
@@ -82,19 +84,26 @@ class Ball {
       );
 }
 
-class Collision {
-  final Ball ball1, ball2;
-  Collision(this.ball1, this.ball2);
+abstract class Collision {
+  void resolve(double deltaTime);
+}
 
-  void resolve() {
+class BallCollision implements Collision {
+  final Ball ball1, ball2;
+  BallCollision(this.ball1, this.ball2);
+  @override
+  void resolve(double deltaTime) {
     final v1 = ball1.vel;
     ball1.vel = ball2.vel;
     ball2.vel = v1;
+
+    ball1.updatePos(deltaTime);
+    ball2.updatePos(deltaTime);
   }
 
   @override
   bool operator ==(Object other) {
-    if (other is! Collision) {
+    if (other is! BallCollision) {
       return false;
     }
     return (ball1 == other.ball1 && ball2 == other.ball2) ||
@@ -103,6 +112,40 @@ class Collision {
 
   @override
   int get hashCode => ball1.hashCode + ball2.hashCode;
+}
+
+enum Wall { top, bottom, left, right }
+
+class WallCollision implements Collision {
+  final Ball ball;
+  final Wall wall;
+  WallCollision(this.ball, this.wall);
+
+  @override
+  void resolve(double deltaTime) {
+    switch (wall) {
+      case Wall.top:
+      case Wall.bottom:
+        ball.vel.dy *= -1;
+        break;
+      case Wall.left:
+      case Wall.right:
+        ball.vel.dx *= -1;
+        break;
+    }
+    ball.updatePos(deltaTime);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! WallCollision) {
+      return false;
+    }
+    return (ball == other.ball && wall == other.wall);
+  }
+
+  @override
+  int get hashCode => ball.hashCode + wall.hashCode;
 }
 
 class PhysicsSim with ChangeNotifier {
@@ -125,11 +168,23 @@ class PhysicsSim with ChangeNotifier {
     }
   }
 
+  var collisions = <Collision>{};
+
   void _checkCollision(double deltaTime) {
     final movingBalls = _balls.where((ball) => true);
-    final collisions = <Collision>{};
-
     for (final movingBall in movingBalls) {
+      if (movingBall.x < movingBall.radius) {
+        collisions.add(WallCollision(movingBall, Wall.left));
+      }
+      if (movingBall.y < movingBall.radius) {
+        collisions.add(WallCollision(movingBall, Wall.top));
+      }
+      if (movingBall.x + movingBall.radius > _size.width) {
+        collisions.add(WallCollision(movingBall, Wall.right));
+      }
+      if (movingBall.y + movingBall.radius > _size.height) {
+        collisions.add(WallCollision(movingBall, Wall.bottom));
+      }
       for (final ball in _balls) {
         if (ball != movingBall) {
           //make sure they are different balls
@@ -137,15 +192,17 @@ class PhysicsSim with ChangeNotifier {
               magnitude(ball.x - movingBall.x, ball.y - movingBall.y);
 
           if (distance < ball.radius + movingBall.radius) {
-            collisions.add(Collision(ball, movingBall));
+            collisions.add(BallCollision(ball, movingBall));
           }
         }
       }
     }
-    print(collisions.length);
-    // for (final ball in collidedBalls) {
-    //   ball.updatePos(deltaTime);
-    // }
+  }
+
+  void _resolveCollisions(double deltaTime) {
+    for (final collision in collisions) {
+      collision.resolve(deltaTime);
+    }
   }
 
   void update(Duration elapsed) {
@@ -153,7 +210,9 @@ class PhysicsSim with ChangeNotifier {
     for (final ball in _balls) {
       ball.updatePos(deltaTime);
     }
+    collisions = {};
     _checkCollision(deltaTime);
+    _resolveCollisions(deltaTime);
     lastFrameTime = elapsed;
     notifyListeners();
   }
@@ -162,9 +221,10 @@ class PhysicsSim with ChangeNotifier {
     final deltaTime = details.sourceTimeStamp! - ball.lastTimeUpdate!;
     final deltaTimeSeconds = deltaTime.inMicroseconds / 1000000;
     ball.lastTimeUpdate = details.sourceTimeStamp;
+    final dx = details.delta.dx / deltaTimeSeconds;
+    final dy = details.delta.dy / deltaTimeSeconds;
 
-    ball.vel = Vector2.cart(details.delta.dx / deltaTimeSeconds,
-        details.delta.dy / deltaTimeSeconds);
+    ball.vel = Vector2.cart(dx.clamp(-1000, 1000), dy.clamp(-1000, 1000));
   }
 }
 
@@ -201,8 +261,8 @@ class _RoomsRadarState extends State<RoomsRadar>
   }
 
   void _generateBalls(rooms) {
-    double x = 0;
-    double y = 0;
+    double x = _kBallRadius * 4;
+    double y = _kBallRadius * 4;
 
     for (final room in rooms) {
       final ball = Ball(x, y, _kBallRadius, _buildRoom(room));
@@ -227,10 +287,13 @@ class _RoomsRadarState extends State<RoomsRadar>
       color: Colors.blueAccent.shade100,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          _physicsSim._size = Size(constraints.maxWidth, constraints.maxHeight);
+          _physicsSim._size = constraints.biggest;
           return Stack(
             fit: StackFit.expand,
-            children: _buildRooms(),
+            children: [
+              LottieBuilder.asset(ImageAssets.radarLottie),
+              ..._buildRooms(),
+            ],
           );
         },
       ),

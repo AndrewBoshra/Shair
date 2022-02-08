@@ -32,6 +32,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^2.3.1
+  lottie: ^1.2.1
   network_info_plus: ^2.1.2
   network_tools: ^1.0.8
   path_provider: ^2.0.8
@@ -54,6 +55,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/lotties/
     - assets/characters/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
