@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
+import 'package:shair/styled_components/gradient.dart';
 
 const _kBallRadius = 40.0;
 const _kFriction = 6;
@@ -59,11 +60,11 @@ class Ball {
       vel.mag = velMag - _kFriction;
     }
 
-    if (vel.dy.abs() < _kFriction) {
-      vel.dy = 0;
-    } else {
-      vel.dy -= vel.dy.isNegative ? -_kFriction : _kFriction;
-    }
+    //   if (vel.dy.abs() < _kFriction) {
+    //     vel.dy = 0;
+    //   } else {
+    //     vel.dy -= vel.dy.isNegative ? -_kFriction : _kFriction;
+    //   }
   }
 
   bool get isMoving => vel.dx.abs() > 0 && vel.dy.abs() > 0;
@@ -149,7 +150,7 @@ class WallCollision implements Collision {
 }
 
 class PhysicsSim with ChangeNotifier {
-  List<Ball> _balls = [];
+  final List<Ball> _balls = [];
   Size _size = Size.zero;
   Duration lastFrameTime = Duration();
   Ticker? _ticker;
@@ -224,7 +225,9 @@ class PhysicsSim with ChangeNotifier {
     final dx = details.delta.dx / deltaTimeSeconds;
     final dy = details.delta.dy / deltaTimeSeconds;
 
-    ball.vel = Vector2.cart(dx.clamp(-1000, 1000), dy.clamp(-1000, 1000));
+    final maxSpeed = _size.longestSide;
+    ball.vel =
+        Vector2.cart(dx.clamp(-maxSpeed, maxSpeed), dy.clamp(-1000, 1000));
   }
 }
 
@@ -253,11 +256,16 @@ class _RoomsRadarState extends State<RoomsRadar>
   }
 
   List<Widget> _buildRooms() {
-    return _physicsSim._balls
-        .map(
-          (e) => e.widget,
-        )
-        .toList();
+    final widgets = <Widget>[];
+    for (final ball in _physicsSim._balls) {
+      widgets.add(ball.widget);
+      widgets.add(Positioned(
+        child: Text('Data'),
+        top: ball.y + ball.radius,
+        left: ball.x - ball.radius,
+      ));
+    }
+    return widgets;
   }
 
   void _generateBalls(rooms) {
@@ -283,8 +291,7 @@ class _RoomsRadarState extends State<RoomsRadar>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.blueAccent.shade100,
+    return GradientBackground(
       child: LayoutBuilder(
         builder: (context, constraints) {
           _physicsSim._size = constraints.biggest;
