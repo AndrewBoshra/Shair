@@ -11,6 +11,8 @@ import 'package:shair/styled_components/gradient.dart';
 
 const _kBallRadius = 40.0;
 const _kFriction = 6;
+const _kVelocity = 1000;
+
 double magnitude(num dx, num dy) {
   return sqrt(pow(dy, 2) + pow(dx, 2));
 }
@@ -42,6 +44,26 @@ class Ball {
   Vector2 vel = Vector2.cart(0, 0);
 
   double radius;
+  double get left => x - radius;
+  double get right => x + radius;
+  double get top => y - radius;
+  double get bottom => y + radius;
+  List<Wall> outside(Size size) {
+    final walls = <Wall>[];
+    if (left < 0) {
+      walls.add(Wall.left);
+    }
+    if (top < 0) {
+      walls.add(Wall.top);
+    }
+    if (right > size.width) {
+      walls.add(Wall.right);
+    }
+    if (bottom > size.height) {
+      walls.add(Wall.bottom);
+    }
+    return walls;
+  }
 
   final Widget _widget;
 
@@ -174,16 +196,16 @@ class PhysicsSim with ChangeNotifier {
   void _checkCollision(double deltaTime) {
     final movingBalls = _balls.where((ball) => true);
     for (final movingBall in movingBalls) {
-      if (movingBall.x < movingBall.radius) {
+      if (movingBall.left < 0) {
         collisions.add(WallCollision(movingBall, Wall.left));
       }
-      if (movingBall.y < movingBall.radius) {
+      if (movingBall.top < 0) {
         collisions.add(WallCollision(movingBall, Wall.top));
       }
-      if (movingBall.x + movingBall.radius > _size.width) {
+      if (movingBall.right > _size.width) {
         collisions.add(WallCollision(movingBall, Wall.right));
       }
-      if (movingBall.y + movingBall.radius > _size.height) {
+      if (movingBall.bottom > _size.height) {
         collisions.add(WallCollision(movingBall, Wall.bottom));
       }
       for (final ball in _balls) {
@@ -206,6 +228,27 @@ class PhysicsSim with ChangeNotifier {
     }
   }
 
+  void _resetOutsideScreen() {
+    final staticBalls = _balls.where((ball) => true);
+
+    for (final ball in staticBalls) {
+      final outSideWalls = ball.outside(_size);
+      if (outSideWalls.isEmpty) continue;
+      if (outSideWalls.contains(Wall.left)) {
+        ball.vel.dx += _kVelocity;
+      }
+      if (outSideWalls.contains(Wall.right)) {
+        ball.vel.dx -= _kVelocity;
+      }
+      if (outSideWalls.contains(Wall.top)) {
+        ball.vel.dy += _kVelocity;
+      }
+      if (outSideWalls.contains(Wall.bottom)) {
+        ball.vel.dy -= _kVelocity;
+      }
+    }
+  }
+
   void update(Duration elapsed) {
     double deltaTime = (elapsed - lastFrameTime).inMicroseconds / 1000000;
     for (final ball in _balls) {
@@ -214,6 +257,7 @@ class PhysicsSim with ChangeNotifier {
     collisions = {};
     _checkCollision(deltaTime);
     _resolveCollisions(deltaTime);
+    _resetOutsideScreen();
     lastFrameTime = elapsed;
     notifyListeners();
   }
@@ -268,7 +312,7 @@ class _RoomsRadarState extends State<RoomsRadar>
     return widgets;
   }
 
-  void _generateBalls(rooms) {
+  void _generateBalls(List<Room> rooms) {
     double x = _kBallRadius * 4;
     double y = _kBallRadius * 4;
 
@@ -285,8 +329,14 @@ class _RoomsRadarState extends State<RoomsRadar>
 
   @override
   void initState() {
-    context.read<AppModel>().rooms.then(_generateBalls);
+    context.read<AppModel>().pollRooms();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    context.read<AppModel>().stopPollingRooms();
+    super.dispose();
   }
 
   @override
@@ -300,6 +350,10 @@ class _RoomsRadarState extends State<RoomsRadar>
             children: [
               LottieBuilder.asset(ImageAssets.radarLottie),
               ..._buildRooms(),
+              ElevatedButton(
+                onPressed: Provider.of<AppModel>(context).stopPollingRooms,
+                child: Text('Stop'),
+              )
             ],
           );
         },
