@@ -1,10 +1,6 @@
-import 'dart:math';
-import 'dart:ui';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shair/constants/colors.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/root_nav.dart';
@@ -31,6 +27,8 @@ class GoLeftIntent extends Intent {}
 
 class GoRightIntent extends Intent {}
 
+class GoNextIntent extends Intent {}
+
 class CharacterSelectScreen extends StatefulWidget {
   const CharacterSelectScreen({Key? key}) : super(key: key);
 
@@ -47,6 +45,8 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     return {
       LogicalKeySet(LogicalKeyboardKey.arrowLeft): GoLeftIntent(),
       LogicalKeySet(LogicalKeyboardKey.arrowRight): GoRightIntent(),
+      LogicalKeySet(LogicalKeyboardKey.enter): GoNextIntent(),
+      LogicalKeySet(LogicalKeyboardKey.numpadEnter): GoNextIntent(),
     };
   }
 
@@ -57,6 +57,9 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
       ),
       GoRightIntent: CallbackAction<GoRightIntent>(
           onInvoke: (_) => _carouselController.nextPage()),
+      GoNextIntent: CallbackAction<GoNextIntent>(
+        onInvoke: (_) => _handlePress(),
+      ),
     };
   }
 

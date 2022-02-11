@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/root_nav.dart';
-import 'package:shair/constants/colors.dart';
 import 'package:shair/styled_components/floating_bubble.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';

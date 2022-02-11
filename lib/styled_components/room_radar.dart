@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
@@ -176,7 +175,7 @@ class WallCollision implements Collision {
 class PhysicsSim with ChangeNotifier {
   final List<Ball> _balls = [];
   Size _size = Size.zero;
-  Duration lastFrameTime = Duration();
+  Duration lastFrameTime = const Duration();
   Ticker? _ticker;
 
   void start() => _ticker?.start();

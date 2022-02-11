@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:shair/constants/colors.dart';
 import 'package:shair/widgets/floating_widget.dart';
 
 const _kCircleAnimationDuration = Duration(milliseconds: 3600);

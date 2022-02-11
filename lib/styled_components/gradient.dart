@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shair/constants/colors.dart';
 
 class GradientBackground extends StatelessWidget {
   const GradientBackground({

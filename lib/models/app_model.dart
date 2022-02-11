@@ -98,27 +98,27 @@ class AppModelRest extends AppModel {
 class AppModelMock extends AppModel {
   @override
   Room create(Room room) {
-    print('Create Room');
+    debugPrint('Create Room');
     return room;
   }
 
   @override
   Future<void> download(SharedFile file) {
-    print('Download $file');
-    return Future.delayed(Duration(seconds: 6));
+    debugPrint('Download $file');
+    return Future.delayed(const Duration(seconds: 6));
   }
 
   @override
   Future<Room> join(Room room) async {
-    print('join $room');
-    await Future.delayed(Duration(seconds: 1));
+    debugPrint('join $room');
+    await Future.delayed(const Duration(seconds: 1));
     return room;
   }
 
   @override
   Future<void> leave(Room room) async {
-    print('leave $room');
-    await Future.delayed(Duration(seconds: 1));
+    debugPrint('leave $room');
+    await Future.delayed(const Duration(seconds: 1));
   }
 
   @override
@@ -131,7 +131,7 @@ class AppModelMock extends AppModel {
 
   @override
   void sendFile(File file, Room room) {
-    print('send ${file.path}');
+    debugPrint('send ${file.path}');
   }
 
   @override
