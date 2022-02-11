@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
-import 'package:shair/constants/colors.dart';
 import 'package:shair/data/config.dart';
-import 'package:shair/screens/start.dart';
 import 'package:provider/provider.dart';
 
 class App extends StatefulWidget {
@@ -19,13 +17,12 @@ class _AppState extends State<App> {
   void initState() {
     context.read<Config>().load().then((value) {
       final config = value as Config;
-      setState(() {
-        if (config.isFirstTime) {
-          RootNavigator.toStartScreen();
-        } else {
-          RootNavigator.toHomeScreen();
-        }
-      });
+      RootNavigator.popAll();
+      if (config.isFirstTime) {
+        RootNavigator.toStartScreen();
+      } else {
+        RootNavigator.toHomeScreen();
+      }
     });
     super.initState();
   }

@@ -1,7 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/services.dart';
-
 abstract class ImageAssets {
   static List<String> getAllCharacter() {
     final imageNames = [
@@ -11,6 +7,7 @@ abstract class ImageAssets {
       'g1.jpg',
       'g2.jpg',
       'g3.jpg',
+      'g4.jpg',
     ];
 
     return imageNames.map((e) => _characterPath + e).toList();

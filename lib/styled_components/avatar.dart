@@ -5,10 +5,12 @@ const _shadowSize = 20.0;
 class CharacterAvatar extends StatelessWidget {
   final String image;
   final Color borderColor;
+  final double lineWidth;
   const CharacterAvatar({
     Key? key,
     required this.image,
     this.borderColor = Colors.white,
+    this.lineWidth = 5,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class CharacterAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(
           color: borderColor,
-          width: 5,
+          width: lineWidth,
         ),
       ),
       decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shair/constants/colors.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
@@ -26,6 +27,10 @@ final _kInputDecoration = InputDecoration(
   ),
 );
 
+class GoLeftIntent extends Intent {}
+
+class GoRightIntent extends Intent {}
+
 class CharacterSelectScreen extends StatefulWidget {
   const CharacterSelectScreen({Key? key}) : super(key: key);
 
@@ -37,6 +42,23 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
   final _carouselController = CarouselController();
   final _textController = TextEditingController();
   String _selectedCharacter = ImageAssets.getAllCharacter()[0];
+
+  Map<ShortcutActivator, Intent> _keyboardShortCuts(BuildContext context) {
+    return {
+      LogicalKeySet(LogicalKeyboardKey.arrowLeft): GoLeftIntent(),
+      LogicalKeySet(LogicalKeyboardKey.arrowRight): GoRightIntent(),
+    };
+  }
+
+  _actions() {
+    return {
+      GoLeftIntent: CallbackAction<GoLeftIntent>(
+        onInvoke: (_) => _carouselController.previousPage(),
+      ),
+      GoRightIntent: CallbackAction<GoRightIntent>(
+          onInvoke: (_) => _carouselController.nextPage()),
+    };
+  }
 
   Widget _buildCharacters(BoxConstraints constraints) {
     final assetImages = ImageAssets.getAllCharacter();
@@ -65,22 +87,28 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
         maxWidth: maxWidth,
         minWidth: 200 * 3,
       ),
-      child: Column(
-        children: [
-          CarouselSlider(
-            carouselController: _carouselController,
-            options: CarouselOptions(
-              onPageChanged: (index, reason) =>
-                  _selectedCharacter = assetImages[index],
-              height: 200,
-              enlargeCenterPage: true,
-              viewportFraction: vpFraction,
-              aspectRatio: 1,
-            ),
-            items: characters,
+      child: Shortcuts(
+        shortcuts: _keyboardShortCuts(context),
+        child: Actions(
+          actions: _actions(),
+          child: Column(
+            children: [
+              CarouselSlider(
+                carouselController: _carouselController,
+                options: CarouselOptions(
+                  onPageChanged: (index, reason) =>
+                      _selectedCharacter = assetImages[index],
+                  height: 200,
+                  enlargeCenterPage: true,
+                  viewportFraction: vpFraction,
+                  aspectRatio: 1,
+                ),
+                items: characters,
+              ),
+              buttons,
+            ],
           ),
-          buttons,
-        ],
+        ),
       ),
     );
   }
