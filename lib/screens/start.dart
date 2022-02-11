@@ -1,11 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/constants/colors.dart';
-import 'package:shair/data/config.dart';
 import 'package:shair/styled_components/floating_bubble.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';
@@ -27,9 +23,11 @@ class StartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context)
-        .textTheme
-        .apply(bodyColor: kColorText, displayColor: kColorText);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final textTheme = theme.textTheme.apply(
+        bodyColor: colorScheme.onPrimary, displayColor: colorScheme.onPrimary);
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -78,7 +76,8 @@ class StartScreen extends StatelessWidget {
                     ],
                   ),
                   Spacers.smallSpacerVr(),
-                  const StyledElevatedButton(
+                  StyledElevatedButton.onPrimary(
+                    context,
                     onPressed: RootNavigator.toCharacterSelectScreen,
                     text: 'Let\'s start',
                   ),

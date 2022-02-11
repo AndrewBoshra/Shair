@@ -42,6 +42,7 @@ class Ball {
 
   /// pixels per second
   Vector2 vel = Vector2.cart(0, 0);
+  Object data;
 
   double radius;
   double get left => x - radius;
@@ -68,7 +69,8 @@ class Ball {
   final Widget _widget;
 
   Function(Ball ball, DragUpdateDetails details)? onPanUpdate;
-  Ball(this.x, this.y, this.radius, this._widget, {this.onPanUpdate});
+  Ball(this.data, this.x, this.y, this.radius, this._widget,
+      {this.onPanUpdate});
 
   void updatePos(double seconds) {
     x += vel.dx * seconds;
@@ -179,6 +181,10 @@ class PhysicsSim with ChangeNotifier {
 
   void start() => _ticker?.start();
 
+  void removeRoom(Room room) {
+    _balls.remove(_balls.firstWhere((ball) => ball.data == room));
+  }
+
   void addBall(Ball ball) {
     if (_balls.contains(ball)) return;
     ball.onPanUpdate = _onBallPanUpdate;
@@ -276,8 +282,7 @@ class PhysicsSim with ChangeNotifier {
 }
 
 class RoomsRadar extends StatefulWidget {
-  const RoomsRadar({Key? key, required this.rooms}) : super(key: key);
-  final List<Room> rooms;
+  const RoomsRadar({Key? key}) : super(key: key);
 
   @override
   State<RoomsRadar> createState() => _RoomsRadarState();
@@ -286,14 +291,17 @@ class RoomsRadar extends StatefulWidget {
 class _RoomsRadarState extends State<RoomsRadar>
     with SingleTickerProviderStateMixin {
   final PhysicsSim _physicsSim = PhysicsSim();
+  Set<Room> _rooms = {};
 
   Widget _buildRoom(Room room) {
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         image: DecorationImage(
-          image: AssetImage(room.image),
-          fit: BoxFit.contain,
+          image: room.image != null
+              ? NetworkImage(room.image!)
+              : AssetImage(ImageAssets.defaultCharacter) as ImageProvider,
+          fit: BoxFit.cover,
         ),
       ),
     );
@@ -301,10 +309,13 @@ class _RoomsRadarState extends State<RoomsRadar>
 
   List<Widget> _buildRooms() {
     final widgets = <Widget>[];
+
     for (final ball in _physicsSim._balls) {
+      final room = ball.data as Room;
+
       widgets.add(ball.widget);
       widgets.add(Positioned(
-        child: Text('Data'),
+        child: Text(room.name),
         top: ball.y + ball.radius,
         left: ball.x - ball.radius,
       ));
@@ -312,24 +323,35 @@ class _RoomsRadarState extends State<RoomsRadar>
     return widgets;
   }
 
-  void _generateBalls(List<Room> rooms) {
-    double x = _kBallRadius * 4;
-    double y = _kBallRadius * 4;
+  double x = _kBallRadius * 4;
+  double y = _kBallRadius * 4;
+  void _generateBalls(Set<Room> rooms) {
+    final addedRooms = rooms.difference(_rooms);
+    //New balls added to the list with animation controller 0->1
+    for (final room in addedRooms) {
+      _physicsSim.addBall(Ball(room, x, y, _kBallRadius, _buildRoom(room)));
 
-    for (final room in rooms) {
-      final ball = Ball(x, y, _kBallRadius, _buildRoom(room));
-      _physicsSim.addBall(ball);
       x += _kBallRadius * 2 + 20;
       y += _kBallRadius * 2 + 20;
     }
-    _physicsSim._ticker = createTicker(_physicsSim.update);
-    _physicsSim.start();
-    _physicsSim.addListener(() => setState(() {}));
+    final removedRooms = _rooms.difference(rooms);
+    //old balls removed from the list after animation controller 1->0
+    for (final room in removedRooms) {
+      _physicsSim.removeRoom(room);
+    }
+    _rooms = rooms;
   }
 
   @override
   void initState() {
-    context.read<AppModel>().pollRooms();
+    final appModel = context.read<AppModel>();
+    appModel.pollRooms();
+    appModel.addListener(() {
+      _generateBalls(appModel.rooms);
+    });
+    _physicsSim._ticker = createTicker(_physicsSim.update);
+    _physicsSim.start();
+    _physicsSim.addListener(() => setState(() {}));
     super.initState();
   }
 
@@ -348,12 +370,12 @@ class _RoomsRadarState extends State<RoomsRadar>
           return Stack(
             fit: StackFit.expand,
             children: [
-              LottieBuilder.asset(ImageAssets.radarLottie),
+              // LottieBuilder.asset(ImageAssets.radarLottie),
               ..._buildRooms(),
-              ElevatedButton(
-                onPressed: Provider.of<AppModel>(context).stopPollingRooms,
-                child: Text('Stop'),
-              )
+              // ElevatedButton(
+              //   onPressed: Provider.of<AppModel>(context).stopPollingRooms,
+              //   child: Text('Stop'),
+              // )
             ],
           );
         },

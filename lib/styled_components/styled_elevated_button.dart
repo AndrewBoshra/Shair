@@ -1,28 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:shair/constants/colors.dart';
+import 'package:provider/provider.dart';
 
-class StyledElevatedButton extends StatelessWidget {
-  const StyledElevatedButton({
+import 'package:shair/constants/colors.dart';
+import 'package:shair/data/app_theme.dart';
+
+abstract class StyledElevatedButton {
+  static Widget onPrimary(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    AppTheme appTheme = Provider.of(context);
+
+    return _StyledElevatedButton(
+      onPressed: onPressed,
+      text: text,
+      textColor: appTheme.onPrimaryButtonTextColor,
+      color: appTheme.onPrimaryButtonColor,
+    );
+  }
+
+  static Widget primary(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    AppTheme appTheme = Provider.of(context);
+
+    return _StyledElevatedButton(
+      onPressed: onPressed,
+      text: text,
+      textColor: appTheme.onPrimaryButtonColor,
+      color: appTheme.onPrimaryButtonTextColor,
+    );
+  }
+}
+
+class _StyledElevatedButton extends StatelessWidget {
+  const _StyledElevatedButton({
     Key? key,
     required this.onPressed,
     required this.text,
+    required this.textColor,
+    required this.color,
   }) : super(key: key);
 
   final VoidCallback onPressed;
   final String text;
+  final Color textColor;
+  final Color color;
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: Colors.white,
+        primary: color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
       )..copyWith(splashFactory: NoSplash.splashFactory),
       onPressed: onPressed,
       child: Text(
         text,
-        style: const TextStyle(
-            color: kColorPrimaryVar, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
       ),
     );
   }

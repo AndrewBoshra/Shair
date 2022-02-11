@@ -17,7 +17,7 @@ class FloatingBubble extends StatelessWidget {
     this.varX = 10,
     this.varY = 20,
     this.duration = _kCircleAnimationDuration,
-    this.color = kColorPrimary,
+    this.color,
   }) : super(key: key);
   final double left;
   final double dim;
@@ -25,7 +25,7 @@ class FloatingBubble extends StatelessWidget {
   final double varX;
   final double varY;
   final Duration duration;
-  final Color color;
+  final Color? color;
   @override
   Widget build(BuildContext context) {
     return FloatingWidget(

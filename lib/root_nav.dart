@@ -41,6 +41,10 @@ abstract class RootNavigator {
     return _goTo(homeScreen);
   }
 
+  static void popAll() {
+    nav?.popUntil((route) => false);
+  }
+
   static Future<T?>? toStartScreen<T>() {
     return _goTo(startScreen);
   }

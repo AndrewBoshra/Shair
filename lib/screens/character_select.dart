@@ -14,6 +14,18 @@ import 'package:shair/styled_components/styled_elevated_button.dart';
 import 'package:shair/widgets/rounded_button.dart';
 import 'package:provider/provider.dart';
 
+final _kInputDecoration = InputDecoration(
+  contentPadding: const EdgeInsets.all(Spacers.kPadding),
+  filled: true,
+  fillColor: Colors.white,
+  focusColor: Colors.red,
+  hintText: 'Tell Us Your Name',
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(20),
+    borderSide: BorderSide.none,
+  ),
+);
+
 class CharacterSelectScreen extends StatefulWidget {
   const CharacterSelectScreen({Key? key}) : super(key: key);
 
@@ -80,14 +92,17 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     config.isFirstTime = false;
 
     config.save();
+
+    RootNavigator.popAll();
     RootNavigator.toHomeScreen();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return LayoutBuilder(builder: (context, constraints) {
       return GradientBackground(
-        colors: const [kColorSecondaryVar, kColorPrimary],
+        colors: [colorScheme.secondaryContainer, colorScheme.primary],
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Center(
@@ -109,24 +124,17 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
                           TextField(
                             controller: _textController,
                             textCapitalization: TextCapitalization.words,
-                            decoration: InputDecoration(
-                              contentPadding:
-                                  const EdgeInsets.all(Spacers.kPadding),
-                              filled: true,
-                              fillColor: Colors.white,
-                              focusColor: Colors.red,
-                              hintText: 'Tell Us Your Name',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                            decoration: _kInputDecoration,
                           ),
                           Spacers.mediumSpacerVr(),
                           Align(
-                              alignment: Alignment.centerRight,
-                              child: StyledElevatedButton(
-                                  onPressed: _handlePress, text: 'Let\'s Go')),
+                            alignment: Alignment.centerRight,
+                            child: StyledElevatedButton.onPrimary(
+                              context,
+                              onPressed: _handlePress,
+                              text: 'Let\'s Go',
+                            ),
+                          ),
                           const Spacer(),
                         ],
                       ),

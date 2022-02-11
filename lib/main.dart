@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/app.dart';
+import 'package:shair/constants/colors.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/models/client.dart';
@@ -15,6 +16,7 @@ void main() {
         ChangeNotifierProvider<AppModel>.value(
             value:
                 AppModelRest(RestClient(), RestServer(), WifiNetworkDevices())),
+        ChangeNotifierProvider.value(value: lightTheme),
       ],
       child: const App(),
     ),

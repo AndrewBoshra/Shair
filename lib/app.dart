@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/constants/colors.dart';
 import 'package:shair/data/config.dart';
@@ -31,25 +32,15 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
+    final AppTheme appTheme = Provider.of(context);
+
     return MaterialApp(
       navigatorKey: RootNavigator.rootNavKey,
-      theme: ThemeData.from(
-        colorScheme: const ColorScheme(
-          background: kColorBackground,
-          onBackground: kColorOnBackground,
-          primary: kColorPrimary,
-          onPrimary: kColorText,
-          secondary: kColorSecondary,
-          onSecondary: kColorText,
-          brightness: Brightness.light,
-          error: kColorError,
-          onError: kColorOnError,
-          surface: kColorSecondaryVar,
-          onSurface: kColorText,
-        ),
-      ).copyWith(
+      theme: appTheme.themeData.copyWith(
         textTheme: GoogleFonts.rubikTextTheme().apply(
-            bodyColor: kColorOnBackground, displayColor: kColorOnBackground),
+          bodyColor: appTheme.textColor,
+          displayColor: appTheme.textColor,
+        ),
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: RootNavigator.loadingScreen,

@@ -2,22 +2,20 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:network_info_plus/network_info_plus.dart';
-import 'package:network_tools/network_tools.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/data/shared_file.dart';
 import 'package:shair/models/client.dart';
 import 'package:shair/models/network_devices.dart';
 import 'package:shair/models/server.dart';
 
-const _kPollDuration = Duration(milliseconds: 500);
+const _kPollDuration = Duration(milliseconds: 1000);
 
 abstract class AppModel extends ChangeNotifier {
-  UnmodifiableListView<Room> get rooms;
+  UnmodifiableSetView<Room> get rooms;
   Room create(Room room);
   Future<Room> join(Room room);
   Future<void> leave(Room room);
-  void sendFile(File file);
+  void sendFile(File file, Room room);
   Future<void> download(SharedFile file);
   void pollRooms();
   void stopPollingRooms();
@@ -45,7 +43,7 @@ class AppModelRest extends AppModel {
   }
 
   @override
-  UnmodifiableListView<Room> get rooms => UnmodifiableListView(_rooms);
+  UnmodifiableSetView<Room> get rooms => UnmodifiableSetView(_rooms);
 
   @override
   Room create(Room room) {
@@ -72,7 +70,7 @@ class AppModelRest extends AppModel {
   }
 
   @override
-  void sendFile(File file) {
+  void sendFile(File file, Room room) {
     // TODO: implement sendFile
     throw UnimplementedError();
   }
@@ -124,17 +122,15 @@ class AppModelMock extends AppModel {
   }
 
   @override
-  UnmodifiableListView<Room> get rooms => UnmodifiableListView([
-        Room(),
-        Room(),
-        Room(),
-        Room(),
-        Room(),
-        Room(),
-      ]);
+  UnmodifiableSetView<Room> get rooms => UnmodifiableSetView({
+        Room(id: 'aaadjiksa', isLocked: false, name: 'Room1'),
+        Room(id: 'aaadsasda', isLocked: true, name: 'Room2'),
+        Room(id: 'aasaddsaa', isLocked: true, name: 'Room3'),
+        Room(id: 'dsadsadas', isLocked: false, name: 'Room4'),
+      });
 
   @override
-  void sendFile(File file) {
+  void sendFile(File file, Room room) {
     print('send ${file.path}');
   }
 
