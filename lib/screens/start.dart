@@ -43,9 +43,10 @@ class StartScreen extends StatelessWidget {
               varY: _animY,
               duration: _kCharacterAnimationDuration,
             ),
-            const FloatingBubble(
+            FloatingBubble(
               left: _characterleft * 3 + _characterWidth,
               top: _characterTop * 2 + _characterHeight,
+              color: Colors.white.withOpacity(.2),
             ),
             Positioned(
               left: Spacers.kPadding,

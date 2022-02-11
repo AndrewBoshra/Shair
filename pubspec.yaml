@@ -29,6 +29,7 @@ environment:
 dependencies:
   carousel_slider: ^4.0.0
   cupertino_icons: ^1.0.2
+  desktop_window: ^0.4.0
   flutter:
     sdk: flutter
   google_fonts: ^2.3.1

@@ -26,7 +26,7 @@ final AppTheme lightTheme = AppTheme(
   onPrimaryColor: _kColorOnPrimary,
   secondaryColor: _kColorSecondary,
   secondaryVarColor: _kColorSecondaryVar,
-  onSecondaryColor: _kColorSecondary,
+  onSecondaryColor: _kColorOnPrimary,
   textColor: _kColorText,
   onPrimaryButtonColor: Colors.white,
   onPrimaryButtonTextColor: _kColorPrimary,

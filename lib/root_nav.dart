@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shair/screens/character_select.dart';
+import 'package:shair/screens/create_room.dart';
 import 'package:shair/screens/home_screen.dart';
+import 'package:shair/screens/join_room.dart';
 import 'package:shair/screens/loading_screen.dart';
 import 'package:shair/screens/start.dart';
 
@@ -14,12 +16,16 @@ abstract class RootNavigator {
         characterSelectScreen: (context) => const CharacterSelectScreen(),
         homeScreen: (context) => const HomeScreen(),
         loadingScreen: (context) => const LoadingScreen(),
+        joinRoomScreen: (context) => const JoinRoomScreen(),
+        createRoomScreen: (context) => const CreateRoomScreen(),
       };
 
   static const String startScreen = '/';
   static const String characterSelectScreen = '/character';
   static const String homeScreen = '/home';
   static const String loadingScreen = '/loading';
+  static const String joinRoomScreen = '/rooms';
+  static const String createRoomScreen = '/create-room';
 
   static Future<T?>? _goTo<T, Tout>(String route,
       {bool pop = false, Object? args, Tout? out}) {
@@ -47,5 +53,13 @@ abstract class RootNavigator {
 
   static Future<T?>? toStartScreen<T>() {
     return _goTo(startScreen);
+  }
+
+  static Future<T?>? toJoinRoomScreen<T>() async {
+    return _goTo(joinRoomScreen);
+  }
+
+  static Future<T?>? toCreateRoomScreen<T>() async {
+    return _goTo(createRoomScreen);
   }
 }

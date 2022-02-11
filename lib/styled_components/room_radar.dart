@@ -2,11 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
-import 'package:shair/styled_components/gradient.dart';
 
 const _kBallRadius = 40.0;
 const _kFriction = 6;
@@ -65,11 +66,7 @@ class Ball {
     return walls;
   }
 
-  final Widget _widget;
-
-  Function(Ball ball, DragUpdateDetails details)? onPanUpdate;
-  Ball(this.data, this.x, this.y, this.radius, this._widget,
-      {this.onPanUpdate});
+  Ball(this.data, this.x, this.y, this.radius);
 
   void updatePos(double seconds) {
     x += vel.dx * seconds;
@@ -82,30 +79,25 @@ class Ball {
     } else {
       vel.mag = velMag - _kFriction;
     }
-
-    //   if (vel.dy.abs() < _kFriction) {
-    //     vel.dy = 0;
-    //   } else {
-    //     vel.dy -= vel.dy.isNegative ? -_kFriction : _kFriction;
-    //   }
   }
 
   bool get isMoving => vel.dx.abs() > 0 && vel.dy.abs() > 0;
-  Widget get widget => Positioned(
-        child: GestureDetector(
-          onPanUpdate: (d) => onPanUpdate?.call(this, d),
-          onPanStart: (d) {
-            lastTimeUpdate = d.sourceTimeStamp;
-          },
-          child: SizedBox(
-            width: radius * 2,
-            height: radius * 2,
-            child: _widget,
-          ),
-        ),
-        left: x - radius,
-        top: y - radius,
-      );
+  // Widget get widget => Positioned(
+  //       child: GestureDetector(
+  //         onPanUpdate: (d) => onPanUpdate?.call(this, d),
+  //         onPanStart: (d) {
+  //           lastTimeUpdate = d.sourceTimeStamp;
+  //         },
+  //         child: SizedBox(
+  //           width: radius * 2,
+  //           height: radius * 2,
+  //           child: _widget,
+  //         ),
+  //       ),
+  //       left: x - radius,
+  //       top: y - radius,
+  //     );
+
 }
 
 abstract class Collision {
@@ -186,7 +178,6 @@ class PhysicsSim with ChangeNotifier {
 
   void addBall(Ball ball) {
     if (_balls.contains(ball)) return;
-    ball.onPanUpdate = _onBallPanUpdate;
     _balls.add(ball);
   }
 
@@ -292,29 +283,48 @@ class _RoomsRadarState extends State<RoomsRadar>
   final PhysicsSim _physicsSim = PhysicsSim();
   Set<Room> _rooms = {};
 
-  Widget _buildRoom(Room room) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-          image: room.image != null
-              ? NetworkImage(room.image!)
-              : AssetImage(ImageAssets.defaultCharacter) as ImageProvider,
-          fit: BoxFit.cover,
+  Widget _buildBall(Ball ball) {
+    final room = ball.data as Room;
+    return Positioned(
+      left: ball.x - ball.radius,
+      top: ball.y - ball.radius,
+      child: GestureDetector(
+        onPanUpdate: (d) => _physicsSim._onBallPanUpdate(ball, d),
+        onPanStart: (d) {
+          ball.lastTimeUpdate = d.sourceTimeStamp;
+        },
+        child: SizedBox(
+          width: ball.radius * 2,
+          height: ball.radius * 2,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: room.image != null
+                    ? NetworkImage(room.image!)
+                    : AssetImage(ImageAssets.defaultCharacter) as ImageProvider,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
   List<Widget> _buildRooms() {
+    AppTheme appTheme = Provider.of(context);
     final widgets = <Widget>[];
 
     for (final ball in _physicsSim._balls) {
       final room = ball.data as Room;
 
-      widgets.add(ball.widget);
+      widgets.add(_buildBall(ball));
       widgets.add(Positioned(
-        child: Text(room.name),
+        child: Text(
+          room.name,
+          style: TextStyle(color: appTheme.onPrimaryColor),
+        ),
         top: ball.y + ball.radius,
         left: ball.x - ball.radius,
       ));
@@ -328,7 +338,7 @@ class _RoomsRadarState extends State<RoomsRadar>
     final addedRooms = rooms.difference(_rooms);
     //New balls added to the list with animation controller 0->1
     for (final room in addedRooms) {
-      _physicsSim.addBall(Ball(room, x, y, _kBallRadius, _buildRoom(room)));
+      _physicsSim.addBall(Ball(room, x, y, _kBallRadius));
 
       x += _kBallRadius * 2 + 20;
       y += _kBallRadius * 2 + 20;
@@ -362,23 +372,17 @@ class _RoomsRadarState extends State<RoomsRadar>
 
   @override
   Widget build(BuildContext context) {
-    return GradientBackground(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          _physicsSim._size = constraints.biggest;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // LottieBuilder.asset(ImageAssets.radarLottie),
-              ..._buildRooms(),
-              // ElevatedButton(
-              //   onPressed: Provider.of<AppModel>(context).stopPollingRooms,
-              //   child: Text('Stop'),
-              // )
-            ],
-          );
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _physicsSim._size = constraints.biggest;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            LottieBuilder.asset(ImageAssets.radarLottie),
+            ..._buildRooms(),
+          ],
+        );
+      },
     );
   }
 }

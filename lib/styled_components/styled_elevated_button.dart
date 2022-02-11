@@ -33,6 +33,21 @@ abstract class StyledElevatedButton {
       color: appTheme.onPrimaryButtonTextColor,
     );
   }
+
+  static Widget secondary(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    AppTheme appTheme = Provider.of(context);
+
+    return _StyledElevatedButton(
+      onPressed: onPressed,
+      text: text,
+      textColor: appTheme.onSecondaryColor,
+      color: appTheme.secondaryColor,
+    );
+  }
 }
 
 class _StyledElevatedButton extends StatelessWidget {

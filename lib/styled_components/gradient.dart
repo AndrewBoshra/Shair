@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shair/data/app_theme.dart';
 
 class GradientBackground extends StatelessWidget {
   const GradientBackground({
@@ -13,9 +15,9 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    AppTheme appTheme = Provider.of(context);
 
-    final themecolors = [colorScheme.primaryContainer, colorScheme.primary];
+    final themecolors = [appTheme.primaryVarColor, appTheme.primaryColor];
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
