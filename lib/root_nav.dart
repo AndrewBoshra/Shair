@@ -1,9 +1,13 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:shair/data/room.dart';
 import 'package:shair/screens/character_select.dart';
 import 'package:shair/screens/create_room.dart';
+import 'package:shair/screens/error.dart';
 import 'package:shair/screens/home_screen.dart';
 import 'package:shair/screens/join_room.dart';
 import 'package:shair/screens/loading_screen.dart';
+import 'package:shair/screens/room_screen.dart';
 import 'package:shair/screens/start.dart';
 
 abstract class RootNavigator {
@@ -11,14 +15,29 @@ abstract class RootNavigator {
   static NavigatorState? get nav => rootNavKey.currentState;
 
   static get initialRoute => startScreen;
-  static Map<String, Widget Function(BuildContext)> get routes => {
-        startScreen: (context) => const StartScreen(),
-        characterSelectScreen: (context) => const CharacterSelectScreen(),
-        homeScreen: (context) => const HomeScreen(),
-        loadingScreen: (context) => const LoadingScreen(),
-        joinRoomScreen: (context) => const JoinRoomScreen(),
-        createRoomScreen: (context) => const CreateRoomScreen(),
-      };
+
+  static Route _materialRoute(Widget screen) =>
+      MaterialPageRoute(builder: (context) => screen);
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case startScreen:
+        return _materialRoute(const StartScreen());
+      case characterSelectScreen:
+        return _materialRoute(const CharacterSelectScreen());
+      case homeScreen:
+        return _materialRoute(const HomeScreen());
+      case loadingScreen:
+        return _materialRoute(const LoadingScreen());
+      case joinRoomScreen:
+        return _materialRoute(const JoinRoomScreen());
+      case createRoomScreen:
+        return _materialRoute(const CreateRoomScreen());
+      case roomScreen:
+        return _materialRoute(RoomScreen(id: settings.arguments as String));
+    }
+    return _materialRoute(
+        const ErrorScreen(error: 'Oops Some Error Happened '));
+  }
 
   static const String startScreen = '/';
   static const String characterSelectScreen = '/character';
@@ -26,6 +45,7 @@ abstract class RootNavigator {
   static const String loadingScreen = '/loading';
   static const String joinRoomScreen = '/rooms';
   static const String createRoomScreen = '/create-room';
+  static const String roomScreen = '/room';
 
   static Future<T?>? _goTo<T, Tout>(String route,
       {bool pop = false, Object? args, Tout? out}) {
@@ -59,7 +79,11 @@ abstract class RootNavigator {
     return _goTo(joinRoomScreen);
   }
 
-  static Future<T?>? toCreateRoomScreen<T>() async {
-    return _goTo(createRoomScreen);
+  static Future<T?>? toCreateRoomScreen<T>({bool pop = false}) async {
+    return _goTo(createRoomScreen, pop: pop);
+  }
+
+  static Future<T?>? toRoomScreen<T>(Room room, {bool pop = false}) async {
+    return _goTo(roomScreen, pop: pop, args: room.id);
   }
 }

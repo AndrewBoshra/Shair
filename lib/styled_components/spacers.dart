@@ -4,24 +4,28 @@ const _smallSpacer = 20.0;
 const _mediumSpacer = 40.0;
 const _largeSpacer = 80.0;
 
+const _smallHzSpacer = 10.0;
+const _mediumHzSpacer = 20.0;
+const _largeHzSpacer = 40.0;
+
 abstract class Spacers {
   static const kPadding = 20.0;
 
   static Widget smallSpacerHz() {
     return const SizedBox(
-      width: _smallSpacer,
+      width: _smallHzSpacer,
     );
   }
 
   static Widget mediumSpacerHz() {
     return const SizedBox(
-      width: _mediumSpacer,
+      width: _mediumHzSpacer,
     );
   }
 
   static Widget largeSpacerHz() {
     return const SizedBox(
-      width: _largeSpacer,
+      width: _largeHzSpacer,
     );
   }
 

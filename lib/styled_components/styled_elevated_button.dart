@@ -45,7 +45,7 @@ abstract class StyledElevatedButton {
       onPressed: onPressed,
       text: text,
       textColor: appTheme.onSecondaryColor,
-      color: appTheme.secondaryColor,
+      color: appTheme.secondaryVarColor,
     );
   }
 }

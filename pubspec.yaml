@@ -30,6 +30,7 @@ dependencies:
   carousel_slider: ^4.0.0
   cupertino_icons: ^1.0.2
   desktop_window: ^0.4.0
+  file_picker: ^4.3.3
   flutter:
     sdk: flutter
   google_fonts: ^2.3.1
@@ -40,6 +41,7 @@ dependencies:
   provider: ^6.0.2
   shelf: ^1.2.0
   shelf_router: ^1.1.2
+  uuid: ^3.0.5
 
 dev_dependencies:
   flutter_lints: ^1.0.0

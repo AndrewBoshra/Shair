@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:shair/data/room.dart';
+import 'package:shair/models/network_devices.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
@@ -15,8 +16,6 @@ abstract class Server {
   // Room lockRoom(Room room,String password);
 
 }
-
-const _kPort = 7895;
 
 class AppResponse extends shelf.Response {
   AppResponse.ok(
@@ -63,7 +62,7 @@ class ShelfServer {
 
   Future<void> start() async {
     if (_server != null) return;
-    _server = await io.serve(router, '0.0.0.0', _kPort);
+    _server = await io.serve(router, '0.0.0.0', kPort);
     return;
   }
 

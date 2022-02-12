@@ -35,7 +35,8 @@ class JoinRoomScreen extends StatelessWidget {
                   const TextSpan(text: 'Or '),
                   TextSpan(
                     recognizer: TapGestureRecognizer()
-                      ..onTap = RootNavigator.toCreateRoomScreen,
+                      ..onTap =
+                          () => RootNavigator.toCreateRoomScreen(pop: true),
                     text: 'Create a room',
                     style: textTheme.subtitle1
                         ?.copyWith(decoration: TextDecoration.underline),

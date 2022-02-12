@@ -19,6 +19,7 @@ abstract class AppModel extends ChangeNotifier {
   Future<void> download(SharedFile file);
   void pollRooms();
   void stopPollingRooms();
+  Room? getRoomWithId(String id);
 }
 
 class AppModelRest extends AppModel {
@@ -46,9 +47,9 @@ class AppModelRest extends AppModel {
   UnmodifiableSetView<Room> get rooms => UnmodifiableSetView(_rooms);
 
   @override
-  Room create(Room room) {
-    // TODO: implement create
-    throw UnimplementedError();
+  Room? getRoomWithId(String id) {
+    final room = _rooms.firstWhere((room) => room.id == id, orElse: Room.empty);
+    return room.isValid ? room : null;
   }
 
   @override
@@ -93,54 +94,12 @@ class AppModelRest extends AppModel {
     _ispollingRooms = false;
     debugPrint('stopped polling');
   }
-}
 
-class AppModelMock extends AppModel {
   @override
   Room create(Room room) {
-    debugPrint('Create Room');
+    if (server.createRoom(room)) {
+      _rooms.add(room);
+    }
     return room;
-  }
-
-  @override
-  Future<void> download(SharedFile file) {
-    debugPrint('Download $file');
-    return Future.delayed(const Duration(seconds: 6));
-  }
-
-  @override
-  Future<Room> join(Room room) async {
-    debugPrint('join $room');
-    await Future.delayed(const Duration(seconds: 1));
-    return room;
-  }
-
-  @override
-  Future<void> leave(Room room) async {
-    debugPrint('leave $room');
-    await Future.delayed(const Duration(seconds: 1));
-  }
-
-  @override
-  UnmodifiableSetView<Room> get rooms => UnmodifiableSetView({
-        Room(id: 'aaadjiksa', isLocked: false, name: 'Room1'),
-        Room(id: 'aaadsasda', isLocked: true, name: 'Room2'),
-        Room(id: 'aasaddsaa', isLocked: true, name: 'Room3'),
-        Room(id: 'dsadsadas', isLocked: false, name: 'Room4'),
-      });
-
-  @override
-  void sendFile(File file, Room room) {
-    debugPrint('send ${file.path}');
-  }
-
-  @override
-  void pollRooms() {
-    // TODO: implement pollRooms
-  }
-
-  @override
-  void stopPollingRooms() {
-    // TODO: implement stopPollingRooms
   }
 }

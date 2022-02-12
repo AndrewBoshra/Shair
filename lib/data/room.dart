@@ -1,16 +1,33 @@
 import 'dart:convert';
 
+import 'package:uuid/uuid.dart';
+
+class DownloadableFile {
+  String? url;
+  int? size;
+}
+
 class Room {
-  final String id;
+  late String id;
   final String name;
   final bool isLocked;
   String? image;
+
+  List<DownloadableFile> _files = [];
+
   Room({
-    required this.id,
+    String? id,
     required this.name,
     required this.isLocked,
     this.image,
-  });
+  }) {
+    this.id = id ?? const Uuid().v4();
+  }
+  Room.empty()
+      : id = '',
+        isLocked = true,
+        name = '';
+  bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
@@ -37,7 +54,6 @@ class Room {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-
     return other is Room && other.id == id;
   }
 

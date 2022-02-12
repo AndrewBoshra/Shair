@@ -18,6 +18,6 @@ abstract class ImageAssets {
   static const _characterPath = 'assets/characters/';
   static const String welcomeCharacter = _imagesPath + 'lab.png';
   static String get defaultCharacter => getAllCharacter()[0];
-  static const String plus = _imagesPath + '+.png';
+  static const String logo = _imagesPath + 'logo.png';
   static const String radarLottie = _lottiePath + 'radar.json';
 }

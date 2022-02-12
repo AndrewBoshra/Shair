@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/root_nav.dart';
@@ -69,10 +70,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     final characters =
         assetImages.map((e) => CharacterAvatar(image: e)).toList();
 
-    const maxWidth = 800.0;
-    const widthBreakPoint = 600;
-
-    var vpFraction = constraints.biggest.width < widthBreakPoint ? .5 : .3;
+    const vpFraction = .5;
 
     final buttons = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,32 +83,26 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
             child: const Icon(Icons.arrow_forward)),
       ],
     );
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        maxWidth: maxWidth,
-        minWidth: 200 * 3,
-      ),
-      child: Shortcuts(
-        shortcuts: _keyboardShortCuts(context),
-        child: Actions(
-          actions: _actions(),
-          child: Column(
-            children: [
-              CarouselSlider(
-                carouselController: _carouselController,
-                options: CarouselOptions(
-                  onPageChanged: (index, reason) =>
-                      _selectedCharacter = assetImages[index],
-                  height: 200,
-                  enlargeCenterPage: true,
-                  viewportFraction: vpFraction,
-                  aspectRatio: 1,
-                ),
-                items: characters,
+    return Shortcuts(
+      shortcuts: _keyboardShortCuts(context),
+      child: Actions(
+        actions: _actions(),
+        child: Column(
+          children: [
+            CarouselSlider(
+              carouselController: _carouselController,
+              options: CarouselOptions(
+                onPageChanged: (index, reason) =>
+                    _selectedCharacter = assetImages[index],
+                height: 200,
+                enlargeCenterPage: true,
+                viewportFraction: vpFraction,
+                aspectRatio: 1,
               ),
-              buttons,
-            ],
-          ),
+              items: characters,
+            ),
+            buttons,
+          ],
         ),
       ),
     );
@@ -130,20 +122,23 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // final colorScheme = Theme.of(context).colorScheme;
+    AppTheme appTheme = Provider.of(context);
+
     return LayoutBuilder(builder: (context, constraints) {
       return GradientBackground(
-        colors: [colorScheme.secondaryContainer, colorScheme.primary],
+        colors: [appTheme.secondaryColor, appTheme.primaryColor],
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: Colors.transparent,
           body: Center(
-            child: Column(
-              children: [
-                const Spacer(),
-                _buildCharacters(constraints),
-                Spacers.mediumSpacerVr(),
-                Expanded(
-                  child: Padding(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildCharacters(constraints),
+                  Spacers.mediumSpacerVr(),
+                  Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: Spacers.kPadding,
                     ),
@@ -166,13 +161,12 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
                               text: 'Let\'s Go',
                             ),
                           ),
-                          const Spacer(),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

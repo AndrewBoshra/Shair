@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shair/data/assets.dart';
+
+import 'package:shair/data/room.dart';
 
 const _shadowSize = 20.0;
 
@@ -34,6 +37,28 @@ class CharacterAvatar extends StatelessWidget {
         image: DecorationImage(image: AssetImage(image), fit: BoxFit.contain),
         shape: BoxShape.circle,
       ),
+    );
+  }
+}
+
+class RoomAvatar extends StatelessWidget {
+  const RoomAvatar({
+    Key? key,
+    required this.room,
+  }) : super(key: key);
+  final Room room;
+  @override
+  Widget build(BuildContext context) {
+    late ImageProvider image;
+
+    if (room.image == null) {
+      image = const AssetImage(ImageAssets.logo);
+      ;
+    } else {
+      image = NetworkImage(room.image!);
+    }
+    return CircleAvatar(
+      foregroundImage: image,
     );
   }
 }

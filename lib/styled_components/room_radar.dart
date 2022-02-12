@@ -82,22 +82,6 @@ class Ball {
   }
 
   bool get isMoving => vel.dx.abs() > 0 && vel.dy.abs() > 0;
-  // Widget get widget => Positioned(
-  //       child: GestureDetector(
-  //         onPanUpdate: (d) => onPanUpdate?.call(this, d),
-  //         onPanStart: (d) {
-  //           lastTimeUpdate = d.sourceTimeStamp;
-  //         },
-  //         child: SizedBox(
-  //           width: radius * 2,
-  //           height: radius * 2,
-  //           child: _widget,
-  //         ),
-  //       ),
-  //       left: x - radius,
-  //       top: y - radius,
-  //     );
-
 }
 
 abstract class Collision {
@@ -269,6 +253,12 @@ class PhysicsSim with ChangeNotifier {
     ball.vel =
         Vector2.cart(dx.clamp(-maxSpeed, maxSpeed), dy.clamp(-1000, 1000));
   }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    super.dispose();
+  }
 }
 
 class RoomsRadar extends StatefulWidget {
@@ -351,22 +341,24 @@ class _RoomsRadarState extends State<RoomsRadar>
     _rooms = rooms;
   }
 
+  late AppModel _appModel;
   @override
   void initState() {
-    final appModel = context.read<AppModel>();
-    appModel.pollRooms();
-    appModel.addListener(() {
-      _generateBalls(appModel.rooms);
+    super.initState();
+    _appModel = context.read<AppModel>();
+    _appModel.pollRooms();
+    _appModel.addListener(() {
+      _generateBalls(_appModel.rooms);
     });
     _physicsSim._ticker = createTicker(_physicsSim.update);
     _physicsSim.start();
     _physicsSim.addListener(() => setState(() {}));
-    super.initState();
   }
 
   @override
   void dispose() {
-    context.read<AppModel>().stopPollingRooms();
+    _physicsSim.dispose();
+    _appModel.stopPollingRooms();
     super.dispose();
   }
 

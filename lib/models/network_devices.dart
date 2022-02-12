@@ -1,11 +1,11 @@
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
 
-const _kPort = 4560;
+const kPort = 4560;
 
 class Device {
   final String ip;
-  String get url => 'http://$ip:$_kPort';
+  String get url => 'http://$ip:$kPort';
   Device(this.ip);
 }
 
