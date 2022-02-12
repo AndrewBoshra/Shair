@@ -2,9 +2,38 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
+const _uuid = Uuid();
+
+class RoomUser {
+  String userId;
+  RoomUser({
+    required this.userId,
+  });
+}
+
 class DownloadableFile {
-  String? url;
+  late String url;
   int? size;
+  late String id;
+  DownloadableFile({
+    required this.id,
+    required this.url,
+    this.size,
+  });
+
+  DownloadableFile.fromBaseUrl({required String baseUrl, int? size}) {
+    id = _uuid.v4();
+    url = baseUrl + id;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DownloadableFile && other.url == url;
+  }
+
+  @override
+  int get hashCode => url.hashCode;
 }
 
 class Room {
@@ -13,7 +42,7 @@ class Room {
   final bool isLocked;
   String? image;
 
-  List<DownloadableFile> _files = [];
+  final Set<DownloadableFile> _files = {};
 
   Room({
     String? id,
@@ -59,4 +88,21 @@ class Room {
 
   @override
   int get hashCode => id.hashCode;
+
+  get files => _files;
+}
+
+class OwnedRoom extends Room {
+  OwnedRoom.empty() : super.empty();
+
+  OwnedRoom({required String name, required bool isLocked})
+      : super(name: name, isLocked: isLocked);
+
+  void addFile(DownloadableFile file) {
+    _files.add(file);
+  }
+
+  void removeFile(DownloadableFile file) {
+    _files.remove(file);
+  }
 }

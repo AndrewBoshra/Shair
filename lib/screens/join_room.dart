@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/room_radar.dart';
 import 'package:shair/styled_components/spacers.dart';
 
@@ -15,6 +16,7 @@ class JoinRoomScreen extends StatelessWidget {
     final textTheme =
         Theme.of(context).textTheme.apply(bodyColor: appTheme.onPrimaryColor);
     return Scaffold(
+      appBar: StyledAppBar.transparent(),
       backgroundColor: appTheme.primaryVarColor,
       body: Center(
         child: Column(

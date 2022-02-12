@@ -13,6 +13,7 @@ abstract class Server {
   bool deleteRoom(Room room);
   Future start();
   Future stop();
+  Future shareFile(File file, OwnedRoom room);
   // Room lockRoom(Room room,String password);
 
 }
@@ -91,5 +92,14 @@ class RestServer extends Server with ChangeNotifier {
   @override
   bool deleteRoom(Room room) {
     return _rooms.remove(room);
+  }
+
+  @override
+  Future shareFile(File file, OwnedRoom room) async {
+    if (!await file.exists()) return;
+    final stats = await file.stat();
+    final downloadableFile = DownloadableFile.fromBaseUrl(
+        baseUrl: 'rooms/${room.id}', size: stats.size);
+    room.addFile(downloadableFile);
   }
 }

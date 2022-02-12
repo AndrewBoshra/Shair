@@ -9,6 +9,7 @@ import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
 import 'package:shair/widgets/rounded_button.dart';
@@ -37,12 +38,12 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     if (_formKey.currentState?.validate() == true) {
       AppModel appModel = context.read();
 
-      final room = Room(
+      final room = OwnedRoom(
         name: _nameEditController.text,
         isLocked: _isLocked,
       );
       appModel.create(room);
-      RootNavigator.toRoomScreen(room);
+      RootNavigator.toRoomScreen(room, pop: true);
     }
   }
 
@@ -63,11 +64,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     AppTheme appTheme = Provider.of(context);
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: appTheme.onBackgroundColor,
-      ),
+      appBar:
+          StyledAppBar.transparent(foregroundColor: appTheme.onBackgroundColor),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
         child: Form(

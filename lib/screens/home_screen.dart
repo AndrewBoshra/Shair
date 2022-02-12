@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
   ) {
     textTheme = textTheme.apply(bodyColor: appTheme.onSecondaryColor);
     return DraggableScrollableSheet(
-      initialChildSize: 0.3,
+      initialChildSize: 0.1,
       minChildSize: 0.1,
       maxChildSize: 0.6,
       builder: (context, scrollController) {

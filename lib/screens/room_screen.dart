@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/screens/error.dart';
+import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';
@@ -20,9 +20,7 @@ class RoomScreen extends StatelessWidget {
     if (room == null) return const ErrorScreen(error: 'Invalid Room');
     return GradientBackground(
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+        appBar: StyledAppBar.transparent(
           title: Row(
             children: [
               SizedBox(
