@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/styled_components/floating_bubble.dart';
@@ -23,10 +25,12 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    AppTheme appTheme = Provider.of(context);
 
     final textTheme = theme.textTheme.apply(
-        bodyColor: colorScheme.onPrimary, displayColor: colorScheme.onPrimary);
+      bodyColor: appTheme.onPrimaryColor,
+      displayColor: appTheme.onPrimaryColor,
+    );
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -46,7 +50,7 @@ class StartScreen extends StatelessWidget {
             FloatingBubble(
               left: _characterleft * 3 + _characterWidth,
               top: _characterTop * 2 + _characterHeight,
-              color: Colors.white.withOpacity(.2),
+              color: appTheme.onPrimaryColor.withOpacity(.2),
             ),
             Positioned(
               left: Spacers.kPadding,

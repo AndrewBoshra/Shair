@@ -18,8 +18,8 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: Config()),
         ChangeNotifierProvider<AppModel>.value(
-            value:
-                AppModelRest(RestClient(), RestServer(), WifiNetworkDevices())),
+            value: AppModelRest(
+                RestClient(), RestServer()..start(), WifiNetworkDevices())),
         ChangeNotifierProvider.value(value: lightTheme),
       ],
       child: const App(),

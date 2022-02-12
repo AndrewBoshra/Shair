@@ -38,6 +38,8 @@ dependencies:
   network_tools: ^1.0.8
   path_provider: ^2.0.8
   provider: ^6.0.2
+  shelf: ^1.2.0
+  shelf_router: ^1.1.2
 
 dev_dependencies:
   flutter_lints: ^1.0.0
