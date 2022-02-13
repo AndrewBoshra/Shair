@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
 
@@ -7,10 +9,27 @@ class Device {
   final String ip;
   String get url => 'http://$ip:$kPort';
   Device(this.ip);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ip': ip,
+    };
+  }
+
+  factory Device.fromMap(Map<String, dynamic> map) {
+    return Device(
+      map['ip'] ?? '',
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory Device.fromJson(String source) => Device.fromMap(json.decode(source));
 }
 
 abstract class NetworkDevices {
   Future<List<Device>> get devices;
+  Future<Device> get currentDevice;
 }
 
 class WifiNetworkDevices implements NetworkDevices {
@@ -27,5 +46,12 @@ class WifiNetworkDevices implements NetworkDevices {
     final hosts = await stream.toList();
     return hosts.map((host) => Device(host.ip)).toSet().toList()
       ..add(Device(ip));
+  }
+
+  @override
+  Future<Device> get currentDevice async {
+    final ip = await (NetworkInfo().getWifiIP());
+    if (ip == null) throw Exception('Couldn\'t get device ip');
+    return Device(ip);
   }
 }

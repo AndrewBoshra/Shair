@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/data/shared_file.dart';
@@ -12,10 +13,10 @@ const _kPollDuration = Duration(milliseconds: 1000);
 
 abstract class AppModel extends ChangeNotifier {
   UnmodifiableSetView<Room> get rooms;
-  Room create(Room room);
+  Future<Room> create(String name, String? image, bool isLocked);
   Future<Room> join(Room room);
   Future<void> leave(Room room);
-  void sendFile(File file, Room room);
+  Future<void> shareFile(PlatformFile file, Room room);
   Future<void> download(SharedFile file);
   void pollRooms();
   void stopPollingRooms();
@@ -70,10 +71,21 @@ class AppModelRest extends AppModel {
     throw UnimplementedError();
   }
 
+  Future<void> _serveFile(PlatformFile file, Room room) async {
+    await server.shareFile(File(file.path!), room);
+  }
+
   @override
-  void sendFile(File file, Room room) {
-    // TODO: implement sendFile
-    throw UnimplementedError();
+  Future<void> shareFile(PlatformFile file, Room room) async {
+    print('share : ${file.path} ${file.size}');
+    if (room.device == await networkDevices.currentDevice) {
+      await _serveFile(file, room);
+      await client.notifyParticipantsAboutFile(file, room);
+    } else {
+      if (await client.askHostToShareFile(file, room)) {
+        await _serveFile(file, room);
+      }
+    }
   }
 
   @override
@@ -96,7 +108,13 @@ class AppModelRest extends AppModel {
   }
 
   @override
-  Room create(Room room) {
+  Future<Room> create(String name, String? image, bool isLocked) async {
+    final room = Room(
+      await networkDevices.currentDevice,
+      name: name,
+      isLocked: isLocked,
+      image: image,
+    );
     if (server.createRoom(room)) {
       _rooms.add(room);
     }

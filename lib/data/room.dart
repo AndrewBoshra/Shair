@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:shair/models/network_devices.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -40,22 +41,30 @@ class Room {
   late String id;
   final String name;
   final bool isLocked;
-  String? image;
+  final String? image;
+  final Device device;
+  List<Device> participants;
 
   final Set<DownloadableFile> _files = {};
 
-  Room({
+  Room(
+    this.device, {
     String? id,
     required this.name,
     required this.isLocked,
     this.image,
+    this.participants = const [],
   }) {
     this.id = id ?? const Uuid().v4();
   }
   Room.empty()
       : id = '',
         isLocked = true,
-        name = '';
+        image = null,
+        name = '',
+        participants = [],
+        device = Device('');
+
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
   Map<String, dynamic> toMap() {
@@ -64,15 +73,22 @@ class Room {
       'name': name,
       'isLocked': isLocked,
       'image': image,
+      'device': device.toMap(),
+      'participants': participants.map((e) => e.toMap()).toList()
     };
   }
 
   factory Room.fromMap(Map<String, dynamic> map) {
+    final participantsRaw = map['participants'] as List;
+    final participants = participantsRaw.map((p) => Device.fromMap(p));
+
     return Room(
+      Device.fromMap(map['device']),
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       isLocked: map['isLocked'] == 'true',
       image: map['image'],
+      participants: participants.toList(),
     );
   }
 
@@ -90,14 +106,6 @@ class Room {
   int get hashCode => id.hashCode;
 
   get files => _files;
-}
-
-class OwnedRoom extends Room {
-  OwnedRoom.empty() : super.empty();
-
-  OwnedRoom({required String name, required bool isLocked})
-      : super(name: name, isLocked: isLocked);
-
   void addFile(DownloadableFile file) {
     _files.add(file);
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/network_devices.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,8 @@ import 'package:http/http.dart' as http;
 abstract class Client {
   Future<bool> isActive(Device device);
   Future<List<Room>> getRooms(Device device);
+  Future<bool> askHostToShareFile(PlatformFile file, Room room);
+  Future<void> notifyParticipantsAboutFile(PlatformFile file, Room room);
 }
 
 class RestClient implements Client {
@@ -27,12 +30,21 @@ class RestClient implements Client {
   @override
   Future<bool> isActive(Device device) async {
     try {
-      final response = await http.get(Uri.parse(device.url));
-      final body = jsonDecode(response.body);
-      return body['app'] == 'shair';
+      final response = await _api.get(device.url);
+      return response.parsedResponse?['app'] == 'shair';
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  Future<bool> askHostToShareFile(PlatformFile file, Room room) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> notifyParticipantsAboutFile(PlatformFile file, Room room) async {
+    throw UnimplementedError();
   }
 }
 

@@ -34,15 +34,15 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     super.initState();
   }
 
-  void _createRoom() {
+  void _createRoom() async {
     if (_formKey.currentState?.validate() == true) {
       AppModel appModel = context.read();
 
-      final room = OwnedRoom(
-        name: _nameEditController.text,
-        isLocked: _isLocked,
+      final room = await appModel.create(
+        _nameEditController.value.text,
+        _roomImage,
+        _isLocked,
       );
-      appModel.create(room);
       RootNavigator.toRoomScreen(room, pop: true);
     }
   }

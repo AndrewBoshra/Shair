@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/data/room.dart';
@@ -45,7 +46,7 @@ class RoomScreen extends StatelessWidget {
               Spacers.mediumSpacerVr(),
               StyledElevatedButton.onPrimary(
                 context,
-                onPressed: _upload,
+                onPressed: () => _upload(appModel, room),
                 text: 'Send Files',
               ),
               Spacers.mediumSpacerVr(),
@@ -56,8 +57,13 @@ class RoomScreen extends StatelessWidget {
     );
   }
 
-  void _upload() {
-    print('upload');
+  void _upload(AppModel appModel, Room room) async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null) {
+      for (final file in result.files) {
+        appModel.shareFile(file, room);
+      }
+    }
   }
 
   Widget _buildFiles(Room room) {

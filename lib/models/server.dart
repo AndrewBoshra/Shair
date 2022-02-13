@@ -13,7 +13,7 @@ abstract class Server {
   bool deleteRoom(Room room);
   Future start();
   Future stop();
-  Future shareFile(File file, OwnedRoom room);
+  Future shareFile(File file, Room room);
   // Room lockRoom(Room room,String password);
 
 }
@@ -25,6 +25,20 @@ class AppResponse extends shelf.Response {
     Encoding? encoding,
     Map<String, Object>? context,
   }) : super.ok(
+          jsonEncode(body),
+          headers: {
+            if (headers != null) ...headers,
+            'Content-Type': 'application/json'
+          },
+          context: context,
+          encoding: encoding,
+        );
+  AppResponse.notFound(
+    Map<String, Object> body, {
+    Map<String, Object>? headers,
+    Encoding? encoding,
+    Map<String, Object>? context,
+  }) : super.notFound(
           jsonEncode(body),
           headers: {
             if (headers != null) ...headers,
@@ -52,6 +66,16 @@ class ShelfServer {
     return AppResponse.ok({'rooms': _rooms.map((e) => e.toMap()).toList()});
   }
 
+  shelf.Response _getRoom(shelf.Request req, String id) {
+    final matchingRooms = _rooms.where((room) => room.id == id);
+    if (matchingRooms.isEmpty) {
+      return AppResponse.notFound(
+          {'status': 'error', 'message': 'room not found'});
+    }
+    // TODO
+    throw UnimplementedError();
+  }
+
   late shelf_router.Router router;
   HttpServer? _server;
 
@@ -59,6 +83,7 @@ class ShelfServer {
     router = shelf_router.Router();
     router.get('/', _root);
     router.get('/rooms', _getRooms);
+    router.get('/rooms/<id>', _getRoom);
   }
 
   Future<void> start() async {
@@ -95,7 +120,7 @@ class RestServer extends Server with ChangeNotifier {
   }
 
   @override
-  Future shareFile(File file, OwnedRoom room) async {
+  Future shareFile(File file, Room room) async {
     if (!await file.exists()) return;
     final stats = await file.stat();
     final downloadableFile = DownloadableFile.fromBaseUrl(

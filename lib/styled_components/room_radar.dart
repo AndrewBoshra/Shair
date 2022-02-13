@@ -12,7 +12,7 @@ import 'package:shair/models/app_model.dart';
 const _kBallRadius = 40.0;
 const _kFriction = 6;
 const _kVelocity = 1000;
-
+final rand = Random();
 double magnitude(num dx, num dy) {
   return sqrt(pow(dy, 2) + pow(dx, 2));
 }
@@ -82,6 +82,17 @@ class Ball {
   }
 
   bool get isMoving => vel.dx.abs() > 0 && vel.dy.abs() > 0;
+  bool isCollidingWith(Ball ball) {
+    if (this != ball) {
+      //make sure they are different balls
+      final distance = magnitude(x - ball.x, y - ball.y);
+
+      if (distance < radius + ball.radius) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 abstract class Collision {
@@ -160,9 +171,27 @@ class PhysicsSim with ChangeNotifier {
     _balls.remove(_balls.firstWhere((ball) => ball.data == room));
   }
 
-  void addBall(Ball ball) {
-    if (_balls.contains(ball)) return;
-    _balls.add(ball);
+  int get _newX =>
+      rand.nextInt(_size.width.floor() - 2 * _kBallRadius.floor()) +
+      _kBallRadius.floor();
+
+  int get _newY =>
+      rand.nextInt(_size.height.floor() - 2 * _kBallRadius.floor()) +
+      _kBallRadius.floor();
+
+  void addBall(Object data) {
+    int tries = 50;
+    late double x;
+    late double y;
+    while (--tries != 0) {
+      x = _newX.toDouble();
+      y = _newY.toDouble();
+      final isEmpty = isEmptySlot(x, y);
+      if (isEmpty) {
+        break;
+      }
+    }
+    _balls.add(Ball(data, x, y, _kBallRadius));
   }
 
   void addBalls(List<Ball> balls) {
@@ -189,14 +218,8 @@ class PhysicsSim with ChangeNotifier {
         collisions.add(WallCollision(movingBall, Wall.bottom));
       }
       for (final ball in _balls) {
-        if (ball != movingBall) {
-          //make sure they are different balls
-          final distance =
-              magnitude(ball.x - movingBall.x, ball.y - movingBall.y);
-
-          if (distance < ball.radius + movingBall.radius) {
-            collisions.add(BallCollision(ball, movingBall));
-          }
+        if (ball.isCollidingWith(movingBall)) {
+          collisions.add(BallCollision(ball, movingBall));
         }
       }
     }
@@ -209,23 +232,13 @@ class PhysicsSim with ChangeNotifier {
   }
 
   void _resetOutsideScreen() {
-    final staticBalls = _balls.where((ball) => true);
+    final staticBalls = _balls.where((ball) => !ball.isMoving);
 
     for (final ball in staticBalls) {
       final outSideWalls = ball.outside(_size);
       if (outSideWalls.isEmpty) continue;
-      if (outSideWalls.contains(Wall.left)) {
-        ball.vel.dx += _kVelocity;
-      }
-      if (outSideWalls.contains(Wall.right)) {
-        ball.vel.dx -= _kVelocity;
-      }
-      if (outSideWalls.contains(Wall.top)) {
-        ball.vel.dy += _kVelocity;
-      }
-      if (outSideWalls.contains(Wall.bottom)) {
-        ball.vel.dy -= _kVelocity;
-      }
+      ball.x = _newX.toDouble();
+      ball.y = _newY.toDouble();
     }
   }
 
@@ -252,6 +265,13 @@ class PhysicsSim with ChangeNotifier {
     final maxSpeed = _size.longestSide;
     ball.vel =
         Vector2.cart(dx.clamp(-maxSpeed, maxSpeed), dy.clamp(-1000, 1000));
+  }
+
+  bool isEmptySlot(double x, double y) {
+    for (final ball in _balls) {
+      if (ball.isCollidingWith(Ball(0, x, y, _kBallRadius))) return false;
+    }
+    return true;
   }
 
   @override
@@ -322,22 +342,19 @@ class _RoomsRadarState extends State<RoomsRadar>
     return widgets;
   }
 
-  double x = _kBallRadius * 4;
-  double y = _kBallRadius * 4;
   void _generateBalls(Set<Room> rooms) {
-    final addedRooms = rooms.difference(_rooms);
-    //New balls added to the list with animation controller 0->1
-    for (final room in addedRooms) {
-      _physicsSim.addBall(Ball(room, x, y, _kBallRadius));
-
-      x += _kBallRadius * 2 + 20;
-      y += _kBallRadius * 2 + 20;
-    }
     final removedRooms = _rooms.difference(rooms);
     //old balls removed from the list after animation controller 1->0
     for (final room in removedRooms) {
       _physicsSim.removeRoom(room);
     }
+
+    final addedRooms = rooms.difference(_rooms);
+    //New balls added to the list with animation controller 0->1
+    for (final room in addedRooms) {
+      _physicsSim.addBall(room);
+    }
+
     _rooms = rooms;
   }
 

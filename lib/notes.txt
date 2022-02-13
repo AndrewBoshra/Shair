@@ -12,3 +12,7 @@ When a user wants to join a room (not his):
     2- when the host accepts this request all users get notified about this user.
 
 when a user wants to download a file he downloads it from the original owner of this file (not the host).
+
+
+when a user wants to share a file he sends a request to the host of this room about this file 
+the host then notifies all the users about it.
