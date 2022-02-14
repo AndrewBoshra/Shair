@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/screens/error.dart';
@@ -17,7 +18,7 @@ class RoomScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AppModel appModel = Provider.of(context);
-    final room = appModel.getRoomWithId(id);
+    final room = appModel.accessableRoowmWithId(id);
     if (room == null) return const ErrorScreen(error: 'Invalid Room');
     return GradientBackground(
       child: Scaffold(
@@ -46,7 +47,7 @@ class RoomScreen extends StatelessWidget {
               Spacers.mediumSpacerVr(),
               StyledElevatedButton.onPrimary(
                 context,
-                onPressed: () => _upload(appModel, room),
+                onPressed: () => _upload(context, room),
                 text: 'Send Files',
               ),
               Spacers.mediumSpacerVr(),
@@ -57,11 +58,11 @@ class RoomScreen extends StatelessWidget {
     );
   }
 
-  void _upload(AppModel appModel, Room room) async {
+  void _upload(BuildContext context, Room room) async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       for (final file in result.files) {
-        appModel.shareFile(file, room);
+        ShareFileCommand(context, file, room).execute();
       }
     }
   }

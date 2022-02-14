@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/join_room.dart';
+import 'package:shair/commands/room_polling.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
@@ -303,6 +305,7 @@ class _RoomsRadarState extends State<RoomsRadar>
         onPanStart: (d) {
           ball.lastTimeUpdate = d.sourceTimeStamp;
         },
+        onTap: JoinRoomCommand(context, room).execute,
         child: SizedBox(
           width: ball.radius * 2,
           height: ball.radius * 2,
@@ -323,7 +326,7 @@ class _RoomsRadarState extends State<RoomsRadar>
   }
 
   List<Widget> _buildRooms() {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
     final widgets = <Widget>[];
 
     for (final ball in _physicsSim._balls) {
@@ -363,9 +366,9 @@ class _RoomsRadarState extends State<RoomsRadar>
   void initState() {
     super.initState();
     _appModel = context.read<AppModel>();
-    _appModel.pollRooms();
+    RoomPollingCommand(context).execute();
     _appModel.addListener(() {
-      _generateBalls(_appModel.rooms);
+      _generateBalls(_appModel.availableRooms);
     });
     _physicsSim._ticker = createTicker(_physicsSim.update);
     _physicsSim.start();
@@ -375,7 +378,7 @@ class _RoomsRadarState extends State<RoomsRadar>
   @override
   void dispose() {
     _physicsSim.dispose();
-    _appModel.stopPollingRooms();
+    _appModel.cancelRoomPolling();
     super.dispose();
   }
 

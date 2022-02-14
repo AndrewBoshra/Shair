@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/create_room.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
@@ -36,13 +37,12 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   void _createRoom() async {
     if (_formKey.currentState?.validate() == true) {
-      AppModel appModel = context.read();
-
-      final room = await appModel.create(
+      final room = CreateRoomCommand(
+        context,
         _nameEditController.value.text,
         _roomImage,
         _isLocked,
-      );
+      ).execute();
       RootNavigator.toRoomScreen(room, pop: true);
     }
   }
@@ -61,7 +61,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar:

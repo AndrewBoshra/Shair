@@ -16,13 +16,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     Config config = Provider.of(context);
     final textTheme = Theme.of(context).textTheme;
-    AppTheme appTheme = Provider.of(context);
-    AppModel appModel = Provider.of(context);
+    final appTheme = AppTheme.of(context);
+    final appModel = AppModel.of(context);
 
     return Scaffold(
       body: Stack(
         children: [
-          _buildHomeScreen(context, config, appModel, appTheme, textTheme),
+          _buildHomeScreen(context, config, appTheme, textTheme),
           _buildOpenedRooms(appModel, appTheme, textTheme),
         ],
       ),
@@ -70,7 +70,8 @@ class HomeScreen extends StatelessWidget {
                         style: textTheme.subtitle1,
                       ),
                       Spacers.smallSpacerVr(),
-                      ...appModel.rooms.map((r) => _buildRoomTile(r, appTheme)),
+                      ...appModel.myRooms
+                          .map((r) => _buildRoomTile(r, appTheme)),
                     ],
                   ),
                 ),
@@ -96,7 +97,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildHomeScreen(BuildContext context, Config config,
-      AppModel appModel, AppTheme appTheme, TextTheme textTheme) {
+      AppTheme appTheme, TextTheme textTheme) {
     return Column(
       children: [
         Expanded(

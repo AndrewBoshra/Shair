@@ -9,7 +9,7 @@ abstract class StyledElevatedButton {
     required VoidCallback onPressed,
     required String text,
   }) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
       onPressed: onPressed,
@@ -24,7 +24,7 @@ abstract class StyledElevatedButton {
     required VoidCallback onPressed,
     required String text,
   }) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
       onPressed: onPressed,
@@ -39,7 +39,7 @@ abstract class StyledElevatedButton {
     required VoidCallback onPressed,
     required String text,
   }) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
       onPressed: onPressed,

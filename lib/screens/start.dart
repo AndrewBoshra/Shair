@@ -25,7 +25,7 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     final textTheme = theme.textTheme.apply(
       bodyColor: appTheme.onPrimaryColor,

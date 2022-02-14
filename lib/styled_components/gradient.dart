@@ -15,7 +15,7 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     final themecolors = [appTheme.primaryVarColor, appTheme.primaryColor];
     return DecoratedBox(

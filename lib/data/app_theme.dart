@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class AppTheme extends ChangeNotifier {
   Color _primaryColor;
@@ -138,6 +139,7 @@ class AppTheme extends ChangeNotifier {
 
   Brightness? brightness;
 
+  static AppTheme of(BuildContext c, {bool listen = false}) => Provider.of(c);
   ThemeData get themeData => ThemeData.from(
         colorScheme: ColorScheme(
           brightness: brightness ?? Brightness.light,

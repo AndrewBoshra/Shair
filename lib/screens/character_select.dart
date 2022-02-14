@@ -123,7 +123,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
   @override
   Widget build(BuildContext context) {
     // final colorScheme = Theme.of(context).colorScheme;
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
 
     return LayoutBuilder(builder: (context, constraints) {
       return GradientBackground(

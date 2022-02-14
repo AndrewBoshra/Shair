@@ -12,7 +12,7 @@ class JoinRoomScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppTheme appTheme = Provider.of(context);
+    final appTheme = AppTheme.of(context);
     final textTheme =
         Theme.of(context).textTheme.apply(bodyColor: appTheme.onPrimaryColor);
     return Scaffold(
