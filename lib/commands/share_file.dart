@@ -4,8 +4,8 @@ import 'package:shair/commands/abstract_command.dart';
 import 'package:shair/data/room.dart';
 
 class ShareFileCommand extends ICommand {
-  ShareFileCommand(BuildContext context, this.file, this.room)
-      : super(context: context);
+  ShareFileCommand(this.file, this.room);
+
   final PlatformFile file;
   final Room room;
 

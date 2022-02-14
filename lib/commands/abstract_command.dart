@@ -6,12 +6,8 @@ import 'package:shair/services/client.dart';
 import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/server.dart';
 
+@immutable
 abstract class ICommand {
-  BuildContext context;
-  ICommand({
-    required this.context,
-  });
-
   execute();
 
   AppModel get appModel => AppGlobals.appModel;
@@ -21,6 +17,5 @@ abstract class ICommand {
 }
 
 abstract class CancelableCommand extends ICommand {
-  CancelableCommand({required BuildContext context}) : super(context: context);
   cancel();
 }

@@ -62,7 +62,7 @@ class RoomScreen extends StatelessWidget {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       for (final file in result.files) {
-        ShareFileCommand(context, file, room).execute();
+        ShareFileCommand(file, room).execute();
       }
     }
   }

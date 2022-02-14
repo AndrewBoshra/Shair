@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/show_join_code.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
+import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/styled_components/avatar.dart';

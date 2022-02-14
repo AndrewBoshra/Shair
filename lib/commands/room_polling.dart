@@ -7,7 +7,6 @@ const _kCoolUpDuration = Duration(milliseconds: 1000);
 
 class RoomPollingCommand extends CancelableCommand {
   bool _isPollingRooms = false;
-  RoomPollingCommand(BuildContext context) : super(context: context);
   @override
   void cancel() {
     _isPollingRooms = false;

@@ -189,3 +189,8 @@ class AppTheme extends ChangeNotifier {
         _errorColor = errorColor,
         _onErrorColor = onErrorColor;
 }
+
+extension Colorize on TextTheme {
+  TextTheme colorize(Color color) =>
+      apply(bodyColor: color, decorationColor: color, displayColor: color);
+}

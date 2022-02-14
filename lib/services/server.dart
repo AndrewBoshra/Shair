@@ -80,7 +80,9 @@ class RestServer extends Server {
 
   Future<void> start() async {
     if (_server != null) return;
-    _server = await io.serve(router, '0.0.0.0', kPort);
+    // _server = await io.serve(router, '0.0.0.0', kPort);
+    //TODO change this port to kPort this is only for dev
+    _server = await io.serve(router, '0.0.0.0', 3000);
     return;
   }
 

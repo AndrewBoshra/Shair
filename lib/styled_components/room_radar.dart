@@ -305,7 +305,7 @@ class _RoomsRadarState extends State<RoomsRadar>
         onPanStart: (d) {
           ball.lastTimeUpdate = d.sourceTimeStamp;
         },
-        onTap: JoinRoomCommand(context, room).execute,
+        onTap: () => JoinRoomCommand(context, room).execute(),
         child: SizedBox(
           width: ball.radius * 2,
           height: ball.radius * 2,
@@ -366,7 +366,7 @@ class _RoomsRadarState extends State<RoomsRadar>
   void initState() {
     super.initState();
     _appModel = context.read<AppModel>();
-    RoomPollingCommand(context).execute();
+    RoomPollingCommand().execute();
     _appModel.addListener(() {
       _generateBalls(_appModel.availableRooms);
     });

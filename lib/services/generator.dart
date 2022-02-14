@@ -7,5 +7,9 @@ final random = Random();
 
 abstract class Generator {
   static String get uid => uuid.v4();
-  static String get userId => (100000 + random.nextInt(899999)).toString();
+  static String get userId {
+    final num1 = (100 + random.nextInt(899)).toString();
+    final num2 = (100 + random.nextInt(899)).toString();
+    return '$num1-$num2';
+  }
 }
