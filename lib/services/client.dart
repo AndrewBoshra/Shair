@@ -52,7 +52,7 @@ class RestClient implements Client {
     final res = await _api.post(
       '${room.owner!.url}/room/${room.id}/join',
       code: room.idInRoom,
-      config: config,
+      personDetails: config.personDetails,
     );
     if (res.hasError) return null;
     return Room.fromMap(res.parsedResponse!['room'] as Map<String, Object?>);
@@ -64,7 +64,7 @@ class RestClient implements Client {
     if (room.owner == null) return room;
 
     final res = await _api.get('${room.owner!.url}/rooms/${room.id}',
-        headers: {'userId': room.idInRoom!});
+        headers: {'code': room.idInRoom!});
     if (res.hasError || res.response!.statusCode != 200) {
       throw Exception('couldn\'t access room $room');
     }
@@ -102,25 +102,25 @@ class Api {
     Map<String, String>? headers,
     String? code,
   }) async {
-    return _handleRequest(() => http.get(
-          Uri.parse(url),
-          headers: {
-            if (headers != null) ...headers,
-            if (code != null) 'code': code,
-          },
-        ));
+    return _handleRequest(
+      () => http.get(
+        Uri.parse(url),
+        headers: {
+          if (headers != null) ...headers,
+          if (code != null) 'code': code,
+        },
+      ),
+    );
   }
 
-  Future<ApiResponse> post(
-    String url, {
-    Map<String, String>? headers,
-    Map<String, String>? body,
-    String? code,
-    Config? config,
-  }) async {
+  Future<ApiResponse> post(String url,
+      {Map<String, String>? headers,
+      Map<String, String>? body,
+      String? code,
+      PersonDetails? personDetails}) async {
     final _body = {
       if (body != null) ...body,
-      if (config != null) ...config.toMap(),
+      if (personDetails != null) ...personDetails.toMap(),
     };
     return _handleRequest(
       () => http.post(

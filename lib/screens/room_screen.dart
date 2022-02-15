@@ -29,7 +29,7 @@ class RoomScreen extends StatelessWidget {
                 height: kToolbarHeight,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: RoomAvatar(room: room),
+                  child: RoomAvatar(imageUrl: room.image),
                 ),
               ),
               Spacers.mediumSpacerHz(),

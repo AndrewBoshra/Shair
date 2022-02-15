@@ -44,20 +44,22 @@ class CharacterAvatar extends StatelessWidget {
 class RoomAvatar extends StatelessWidget {
   const RoomAvatar({
     Key? key,
-    required this.room,
+    required this.imageUrl,
   }) : super(key: key);
-  final Room room;
+  final String? imageUrl;
   @override
   Widget build(BuildContext context) {
-    late ImageProvider image;
+    const placeHolder = AssetImage(ImageAssets.logo);
+    ImageProvider image;
 
-    if (room.image == null) {
-      image = const AssetImage(ImageAssets.logo);
+    if (imageUrl == null) {
+      image = placeHolder;
     } else {
-      image = NetworkImage(room.image!);
+      image = NetworkImage(imageUrl!);
     }
     return CircleAvatar(
       foregroundImage: image,
+      backgroundImage: placeHolder,
     );
   }
 }

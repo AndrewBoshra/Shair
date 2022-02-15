@@ -77,7 +77,7 @@ class Room {
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
-  Map<String, dynamic> toMap() {
+  Map<String, Object?> toMap() {
     return {
       'id': id,
       'name': name,

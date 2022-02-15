@@ -102,7 +102,9 @@ class HomeScreen extends StatelessWidget {
   ListTile _buildRoomTile(Room room, AppTheme appTheme) {
     return ListTile(
       onTap: () => RootNavigator.toRoomScreen(room),
-      leading: RoomAvatar(room: room),
+      leading: RoomAvatar(
+        imageUrl: room.image,
+      ),
       title: Text(
         room.name,
         style: TextStyle(

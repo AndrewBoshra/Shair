@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shair/core/validators.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
@@ -40,6 +41,8 @@ class CharacterSelectScreen extends StatefulWidget {
 class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
   final _carouselController = CarouselController();
   final _textController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   String _selectedCharacter = ImageAssets.getAllCharacter()[0];
 
   Map<ShortcutActivator, Intent> _keyboardShortCuts(BuildContext context) {
@@ -59,7 +62,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
       GoRightIntent: CallbackAction<GoRightIntent>(
           onInvoke: (_) => _carouselController.nextPage()),
       GoNextIntent: CallbackAction<GoNextIntent>(
-        onInvoke: (_) => _handlePress(),
+        onInvoke: (_) => _createUser(),
       ),
     };
   }
@@ -108,7 +111,9 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     );
   }
 
-  void _handlePress() {
+  void _createUser() {
+    final isValid = _formKey.currentState?.validate();
+    if (isValid == null || !isValid) return;
     final config = context.read<Config>();
     config.name = _textController.value.text;
     config.character = _selectedCharacter;
@@ -133,39 +138,45 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
           backgroundColor: Colors.transparent,
           body: Center(
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildCharacters(constraints),
-                  Spacers.mediumSpacerVr(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Spacers.kPadding,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          TextField(
-                            controller: _textController,
-                            textCapitalization: TextCapitalization.words,
-                            decoration: _kInputDecoration,
-                          ),
-                          Spacers.mediumSpacerVr(),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: StyledElevatedButton.onPrimary(
-                              context,
-                              onPressed: _handlePress,
-                              text: 'Let\'s Go',
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildCharacters(constraints),
+                    Spacers.mediumSpacerVr(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Spacers.kPadding,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            TextFormField(
+                              controller: _textController,
+                              textCapitalization: TextCapitalization.words,
+                              decoration: _kInputDecoration,
+                              validator:
+                                  const EmptyStringValidator('Name').validate,
                             ),
-                          ),
-                        ],
+                            Spacers.mediumSpacerVr(),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: StyledElevatedButton.onPrimary(
+                                context,
+                                onPressed: _createUser,
+                                text: 'Let\'s Go',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

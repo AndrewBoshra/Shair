@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+
 import 'package:shair/data/saveable.dart';
 
 enum ThemeEnum { dark, light }
@@ -23,48 +24,67 @@ ThemeEnum? themeFromString(String? theme) {
   return null;
 }
 
+class PersonDetails {
+  static const String _characterStr = 'character';
+  static const String _nameStr = 'name';
+  String? character;
+  String? name;
+
+  PersonDetails({this.name, this.character});
+
+  factory PersonDetails.fromMap(Map<String, Object?> map) {
+    return PersonDetails(
+      name: map[_nameStr].toString(),
+      character: map[_characterStr].toString(),
+    );
+  }
+
+  Map<String, Object?> toMap() {
+    return {
+      _characterStr: character,
+      _nameStr: name,
+    };
+  }
+}
+
 class Config extends Saveable with ChangeNotifier {
   bool _isFirstTime;
-  String? _character;
-  String? _name;
   ThemeEnum? _theme;
-
+  late PersonDetails personDetails;
   Config({
     bool isFirstTime = true,
     String? character,
     String? name,
     ThemeEnum? theme,
   })  : _isFirstTime = isFirstTime,
-        _character = character,
-        _name = name,
         _theme = theme,
-        super('config.conf');
+        super('config.conf') {
+    personDetails = PersonDetails(name: name, character: character);
+  }
 
   static const String _isFirstTimeStr = 'isFirstTime';
-  static const String _characterStr = 'character';
-  static const String _nameStr = 'name';
   static const String _themeStr = 'theme';
+  static const String _personStr = 'person';
 
   bool get isFirstTime => _isFirstTime;
-  String? get character => _character;
-  String? get name => _name;
+  String? get character => personDetails.character;
+  String? get name => personDetails.name;
   ThemeEnum? get theme => _theme;
   @override
   Map<String, Object?> toMap() {
     return {
       _isFirstTimeStr: _isFirstTime,
-      _characterStr: _character,
-      _nameStr: _name,
+      _personStr: personDetails.toMap(),
       _themeStr: themeToString(_theme),
     };
   }
 
   @override
-  Config readFromJson(Map<String, Object?> json) {
-    _isFirstTime = (json[_isFirstTimeStr] as bool?) ?? true;
-    _character = json[_characterStr] as String?;
-    _name = json[_nameStr] as String?;
-    _theme = themeFromString(json[_nameStr] as String?);
+  Config readFromJson(Map<String, Object?> map) {
+    _isFirstTime = (map[_isFirstTimeStr] as bool?) ?? true;
+    personDetails =
+        PersonDetails.fromMap((map[_personStr] as Map<String, Object?>?) ?? {});
+    _theme = themeFromString(map[_themeStr] as String?);
     notifyListeners();
     return this;
   }
@@ -75,12 +95,12 @@ class Config extends Saveable with ChangeNotifier {
   }
 
   set name(String? newName) {
-    _name = newName;
+    personDetails.name = newName;
     notifyListeners();
   }
 
   set character(String? newCharacter) {
-    _character = newCharacter;
+    personDetails.character = newCharacter;
     notifyListeners();
   }
 }

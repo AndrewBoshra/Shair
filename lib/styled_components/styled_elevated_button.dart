@@ -47,6 +47,21 @@ abstract class StyledElevatedButton {
       color: appTheme.secondaryVarColor,
     );
   }
+
+  static Widget error(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    final appTheme = AppTheme.of(context);
+
+    return _StyledElevatedButton(
+      onPressed: onPressed,
+      text: text,
+      textColor: appTheme.onErrorColor,
+      color: appTheme.errorColor,
+    );
+  }
 }
 
 class _StyledElevatedButton extends StatelessWidget {
