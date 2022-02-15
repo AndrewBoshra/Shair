@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/styled_components/app_bar.dart';

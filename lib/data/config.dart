@@ -50,7 +50,7 @@ class Config extends Saveable with ChangeNotifier {
   String? get name => _name;
   ThemeEnum? get theme => _theme;
   @override
-  Map<String, Object?> toJson() {
+  Map<String, Object?> toMap() {
     return {
       _isFirstTimeStr: _isFirstTime,
       _characterStr: _character,

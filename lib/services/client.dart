@@ -1,35 +1,17 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
 
-class JoinResponse {
-  final bool isAccepted;
-  String? idInRoom;
-  String? roomId;
-  JoinResponse({
-    required this.isAccepted,
-    this.roomId,
-    this.idInRoom,
-  });
-
-  Map<String, Object> toMap() {
-    return {
-      'isAccepted': isAccepted,
-      'idInRoom': idInRoom ?? '',
-      'roomId': roomId ?? ''
-    };
-  }
-}
-
 abstract class Client {
-  Future<bool> isActive(Device device);
-  Future<List<Room>> getRooms(Device device);
+  Future<List<Room>?> getRooms(Device device);
   Future<bool> askHostToShareFile(PlatformFile file, Room room);
-  Future<JoinResponse> askToJoin(Room room);
+  Future<Room?> askToJoin(Room room, Config config);
 
   /// Must be joined to that room
   Future<Room> getRoomDetails(Room room);
@@ -38,27 +20,21 @@ abstract class Client {
 
 class RestClient implements Client {
   final Api _api = Api();
+
   @override
-  Future<List<Room>> getRooms(Device device) async {
-    final res = await _api.get(device.url + '/rooms');
+  Future<List<Room>?> getRooms(Device device) async {
+    final res = await _api.get(device.url);
     if (res.hasError) return [];
+    if (res.parsedResponse?['app'] != 'shair') return null;
+
     final roomsRaw = res.parsedResponse!['rooms'] as List;
 
     final rooms = <Room>[];
     for (final raw in roomsRaw) {
-      rooms.add(Room.fromMap(raw));
+      final room = Room.fromMap(raw, owner: device);
+      rooms.add(room);
     }
     return rooms;
-  }
-
-  @override
-  Future<bool> isActive(Device device) async {
-    try {
-      final response = await _api.get(device.url);
-      return response.parsedResponse?['app'] == 'shair';
-    } catch (e) {
-      return false;
-    }
   }
 
   @override
@@ -72,8 +48,14 @@ class RestClient implements Client {
   }
 
   @override
-  Future<JoinResponse> askToJoin(Room room) async {
-    throw UnimplementedError();
+  Future<Room?> askToJoin(Room room, Config config) async {
+    final res = await _api.post(
+      '${room.owner!.url}/room/${room.id}/join',
+      code: room.idInRoom,
+      config: config,
+    );
+    if (res.hasError) return null;
+    return Room.fromMap(res.parsedResponse!['room'] as Map<String, Object?>);
   }
 
   @override
@@ -91,7 +73,8 @@ class RestClient implements Client {
 }
 
 class ApiResponse {
-  bool get hasError => parsedResponse == null;
+  bool get hasError =>
+      parsedResponse == null || response == null || response!.statusCode >= 400;
   bool get hasData => !hasError;
   final Map<String, Object?>? parsedResponse;
   final http.Response? response;
@@ -108,23 +91,46 @@ class Api {
       final response = await fn();
       final data = jsonDecode(response.body);
 
-      return ApiResponse(parsedResponse: data);
+      return ApiResponse(parsedResponse: data, response: response);
     } catch (e) {
       return ApiResponse(error: e);
     }
   }
 
-  Future<ApiResponse> get(String url, {Map<String, String>? headers}) async {
-    return _handleRequest(() => http.get(Uri.parse(url), headers: headers));
+  Future<ApiResponse> get(
+    String url, {
+    Map<String, String>? headers,
+    String? code,
+  }) async {
+    return _handleRequest(() => http.get(
+          Uri.parse(url),
+          headers: {
+            if (headers != null) ...headers,
+            if (code != null) 'code': code,
+          },
+        ));
   }
 
-  Future<ApiResponse> post(String url,
-      {Map<String, String>? headers, Map<String, String>? body}) async {
+  Future<ApiResponse> post(
+    String url, {
+    Map<String, String>? headers,
+    Map<String, String>? body,
+    String? code,
+    Config? config,
+  }) async {
+    final _body = {
+      if (body != null) ...body,
+      if (config != null) ...config.toMap(),
+    };
     return _handleRequest(
       () => http.post(
         Uri.parse(url),
-        headers: headers,
-        body: body,
+        headers: {
+          if (headers != null) ...headers,
+          if (code != null) 'code': code,
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode(_body),
       ),
     );
   }

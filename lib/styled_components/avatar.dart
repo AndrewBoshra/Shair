@@ -53,7 +53,6 @@ class RoomAvatar extends StatelessWidget {
 
     if (room.image == null) {
       image = const AssetImage(ImageAssets.logo);
-      ;
     } else {
       image = NetworkImage(room.image!);
     }

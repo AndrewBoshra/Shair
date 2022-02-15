@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/root_nav.dart';

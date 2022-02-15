@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/screens/character_select.dart';

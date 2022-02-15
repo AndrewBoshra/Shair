@@ -7,8 +7,6 @@ import 'package:shair/commands/create_room.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';
-import 'package:shair/data/room.dart';
-import 'package:shair/models/app_model.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/spacers.dart';
@@ -104,6 +102,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Name Can\'t be empty';
                   }
+                  return null;
                 },
                 textAlign: TextAlign.center,
                 decoration: const InputDecoration(

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:shair/actions/abstract.dart';
 import 'package:shair/commands/room_polling.dart';
 import 'package:shair/data/room.dart';
-import 'package:shair/services/server.dart';
 
 ///class Containing general app state
 ///

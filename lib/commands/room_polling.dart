@@ -1,7 +1,6 @@
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
 import 'package:shair/data/room.dart';
-import 'package:shair/services/client.dart';
 
 const _kCoolUpDuration = Duration(milliseconds: 1000);
 
@@ -9,6 +8,7 @@ class RoomPollingCommand extends CancelableCommand {
   bool _isPollingRooms = false;
   @override
   void cancel() {
+    debugPrint('Stop Polling');
     _isPollingRooms = false;
   }
 
@@ -16,10 +16,9 @@ class RoomPollingCommand extends CancelableCommand {
     var _rooms = <Room>{};
     final devices = await wifiDevices.devices;
     for (final device in devices) {
-      if (await client.isActive(device)) {
-        final deviceRooms = await client.getRooms(device);
-        _rooms.addAll(deviceRooms);
-      }
+      var deviceRooms = await client.getRooms(device);
+      deviceRooms ??= [];
+      _rooms.addAll(deviceRooms);
     }
     return _rooms;
   }

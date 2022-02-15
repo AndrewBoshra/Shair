@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:shair/models/app_model.dart';
-import 'package:shair/services/network_devices.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
@@ -78,6 +76,7 @@ class RestServer extends Server {
     // router.get('/rooms/<id>', _auth(innerHandler: _getRoom));
   }
 
+  @override
   Future<void> start() async {
     if (_server != null) return;
     // _server = await io.serve(router, '0.0.0.0', kPort);
@@ -86,6 +85,7 @@ class RestServer extends Server {
     return;
   }
 
+  @override
   Future<void> stop() async {
     await _server?.close();
     _server = null;

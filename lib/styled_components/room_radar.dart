@@ -13,7 +13,6 @@ import 'package:shair/models/app_model.dart';
 
 const _kBallRadius = 40.0;
 const _kFriction = 6;
-const _kVelocity = 1000;
 final rand = Random();
 double magnitude(num dx, num dy) {
   return sqrt(pow(dy, 2) + pow(dx, 2));

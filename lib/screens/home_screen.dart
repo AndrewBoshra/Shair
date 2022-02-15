@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shair/commands/show_join_code.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
-import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/styled_components/avatar.dart';
@@ -25,7 +23,8 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           _buildHomeScreen(context, config, appTheme, textTheme),
-          _buildOpenedRooms(appModel, appTheme, textTheme),
+          if (appModel.accessableRooms.isNotEmpty)
+            _buildOpenedRooms(appModel, appTheme, textTheme),
         ],
       ),
     );
@@ -67,13 +66,28 @@ class HomeScreen extends StatelessWidget {
                   child: ListView(
                     controller: scrollController,
                     children: [
-                      Text(
-                        'Your Rooms',
-                        style: textTheme.subtitle1,
-                      ),
-                      Spacers.smallSpacerVr(),
-                      ...appModel.myRooms
-                          .map((r) => _buildRoomTile(r, appTheme)),
+                      if (appModel.myRooms.isNotEmpty) ...[
+                        Spacers.smallSpacerVr(),
+                        Text(
+                          'Your Rooms',
+                          style: textTheme.subtitle1,
+                        ),
+                        Spacers.smallSpacerVr(),
+                        ...appModel.myRooms
+                            .map((r) => _buildRoomTile(r, appTheme)),
+                        Spacers.smallSpacerVr(),
+                        Divider(color: appTheme.onSecondaryColor),
+                      ],
+                      if (appModel.joinedRooms.isNotEmpty) ...[
+                        Spacers.smallSpacerVr(),
+                        Text(
+                          'Joined Rooms',
+                          style: textTheme.subtitle1,
+                        ),
+                        Spacers.smallSpacerVr(),
+                        ...appModel.joinedRooms
+                            .map((r) => _buildRoomTile(r, appTheme)),
+                      ],
                     ],
                   ),
                 ),

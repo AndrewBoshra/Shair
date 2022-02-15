@@ -139,7 +139,8 @@ class AppTheme extends ChangeNotifier {
 
   Brightness? brightness;
 
-  static AppTheme of(BuildContext c, {bool listen = false}) => Provider.of(c);
+  static AppTheme of(BuildContext c, {bool listen = false}) =>
+      Provider.of(c, listen: listen);
   ThemeData get themeData => ThemeData.from(
         colorScheme: ColorScheme(
           brightness: brightness ?? Brightness.light,

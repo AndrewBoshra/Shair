@@ -88,8 +88,8 @@ class Room {
     };
   }
 
-  factory Room.fromMap(Map<String, dynamic> map) {
-    final participantsRaw = map['participants'] as List;
+  factory Room.fromMap(Map<String, dynamic> map, {Device? owner}) {
+    final participantsRaw = (map['participants'] ?? []) as List;
     final participants = participantsRaw.map((p) => Device.fromMap(p));
 
     return Room(
@@ -98,6 +98,7 @@ class Room {
       isLocked: map['isLocked'] == 'true',
       image: map['image'],
       participants: participants.toList(),
+      owner: owner,
     );
   }
 

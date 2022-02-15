@@ -1,22 +1,36 @@
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shair/commands/abstract_command.dart';
-import 'package:shair/commands/show_join_code.dart';
+import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
+import 'package:shair/dialogs/show_dialog.dart';
+import 'package:shair/dialogs/snakbars.dart';
+import 'package:shair/root_nav.dart';
 import 'package:shair/services/generator.dart';
 
 class JoinRoomCommand extends ICommand {
   final Room room;
   final BuildContext context;
   JoinRoomCommand(this.context, this.room);
-
+  Config get config => context.read<Config>();
   @override
-  execute() {
-    if (room.owner == null) {
-      return;
-    }
+  execute() async {
+    //TODO uncomment this
+    // if (room.owner == null) {
+    //   return;
+    // }
     room.idInRoom = Generator.userId;
-    ShowJoinCodeCommand(context, room).execute();
-    //client.askToJoin(room);
-    // print('should ask to join now');
+    Dialogs.showJoinCodeDialog(context, room.idInRoom ?? '');
+    final joinRes = await client.askToJoin(room, config);
+    if (joinRes == null) {
+      SnackBars.show(
+        context,
+        SnackBars.error(
+            context, 'Your Request to join ${room.name} was rejected'),
+      );
+    } else {
+      appModel.addRoomToJoinedRooms(room);
+      RootNavigator.toRoomScreen(room, pop: true);
+    }
   }
 }

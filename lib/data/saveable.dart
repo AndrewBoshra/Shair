@@ -48,7 +48,7 @@ class UniversalFile {
 
 abstract class Saveable {
   Future<Saveable> save() async {
-    await file.writeJson(toJson());
+    await file.writeJson(toMap());
     return this;
   }
 
@@ -58,7 +58,7 @@ abstract class Saveable {
     return this;
   }
 
-  Map<String, Object?> toJson();
+  Map<String, Object?> toMap();
   Saveable readFromJson(Map<String, Object?> json);
 
   late UniversalFile file;
