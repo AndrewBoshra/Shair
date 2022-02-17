@@ -32,6 +32,7 @@ class JoinRoomCommand extends ICommand {
       );
     } else {
       appModel.addRoomToJoinedRooms(joinRes);
+
       RootNavigator.toRoomScreen(joinRes, pop: true);
     }
   }

@@ -1,0 +1,7 @@
+when user joins a room he gets an access code:
+    - he joins socket channel at room/<id>/channel
+    - if he has the right code he is accepted to join this room
+    - then he sends his data over the socket
+    - the room host uses this data to add him to the room
+    - ONLY THE HOST CAN BROADCAST MESSAGES TO ALL THE OTHER PARTICIPANTS
+    

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
@@ -16,15 +17,13 @@ class Device {
     };
   }
 
-  factory Device.fromMap(Map<String, dynamic> map) {
+  factory Device.fromMap(Map<String, dynamic> map, {WebSocket? ws}) {
     return Device(
       map['ip'] ?? '',
     );
   }
 
   String toJson() => json.encode(toMap());
-
-  factory Device.fromJson(String source) => Device.fromMap(json.decode(source));
 
   @override
   bool operator ==(Object other) {

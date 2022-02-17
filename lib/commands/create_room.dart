@@ -8,7 +8,7 @@ class CreateRoomCommand extends ICommand {
   final bool isLocked;
   @override
   Room execute() {
-    final room = JoinedRoom(name: name, isLocked: isLocked, image: image);
+    final room = OwnedRoom(name: name, isLocked: isLocked, image: image);
     appModel.addRoomToMyRooms(room);
     return room;
   }

@@ -10,6 +10,8 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
 
 import 'package:shair/data/room.dart';
+import 'package:shelf_web_socket/shelf_web_socket.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 abstract class Server {
   Future start();
@@ -20,7 +22,7 @@ class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
 
-  Set<JoinedRoom> get _rooms => _appModel.myRooms;
+  Set<OwnedRoom> get _rooms => _appModel.myRooms;
 
   // MiddleWares
   shelf.Handler _auth(innerHandler) {
@@ -36,12 +38,26 @@ class ProtectedRoutes {
   shelf.Handler _validateRoom(innerHandler) {
     return (request) {
       final roomId = request.params['id'];
-      final room = _rooms.firstWhere((room) => room.id == roomId,
-          orElse: JoinedRoom.empty);
-      if (!room.isValid) {
+
+      final valid = _rooms.any((room) => room.id == roomId);
+      if (!valid) {
         return AppResponse.notFound({});
       }
       return innerHandler(request);
+    };
+  }
+
+  shelf.Handler _joinedRoom(innerHandler) {
+    return (request) {
+      final roomId = request.params['id']!;
+      final userCode = request.headers['code']!;
+      final room = _rooms.firstWhere((room) => room.id == roomId);
+
+      if (room.isInRoom(userCode)) {
+        return innerHandler(request);
+      } else {
+        return AppResponse.forbidden({});
+      }
     };
   }
 
@@ -68,14 +84,18 @@ class ProtectedRoutes {
       return AppResponse.forbidden({});
     }
 
-    return AppResponse.ok(room.toMap());
+    return AppResponse.ok({...room.toMap(), 'code': joinResponse.code});
   }
+
+  final _channelHandler = webSocketHandler((WebSocketChannel ws) {
+    ws.sink.add('data');
+  });
 
   //////////////////////////
   //       Helpers        //
   //////////////////////////
 
-  JoinedRoom? _getRoomWithId(String roomId) {
+  OwnedRoom? _getRoomWithId(String roomId) {
     final matchingRooms = _rooms.where((room) => room.id == roomId);
     if (matchingRooms.isEmpty) null;
     return matchingRooms.first;
@@ -86,13 +106,17 @@ class ProtectedRoutes {
 
   ProtectedRoutes(this._appModel) {
     _router = shelf_router.Router();
-    _router
-      ..post(
-        '/<id>/join',
-        const shelf.Pipeline()
-            .addMiddleware(_validateRoom)
-            .addHandler(_joinRoom),
-      );
+
+    final validRoomPipe = const shelf.Pipeline().addMiddleware(_validateRoom);
+    final joinedRoomPipe = validRoomPipe.addMiddleware(_joinedRoom);
+    _router.post(
+      '/<id>/join',
+      validRoomPipe.addHandler(_joinRoom),
+    );
+    _router.all(
+      '/<id>/channel',
+      joinedRoomPipe.addHandler(_channelHandler),
+    );
   }
 }
 
@@ -145,7 +169,7 @@ class AppResponse extends shelf.Response {
     Encoding? encoding,
     Map<String, Object>? context,
   }) : super.ok(
-          jsonEncode({...body, 'status': 'succes'}),
+          jsonEncode({...body, 'status': 'success'}),
           headers: {
             if (headers != null) ...headers,
             'Content-Type': 'application/json'

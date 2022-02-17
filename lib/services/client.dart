@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,14 @@ import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 abstract class Client {
   Future<List<Room>?> getRooms(Device device);
   Future<bool> askHostToShareFile(PlatformFile file, Room room);
   Future<JoinedRoom?> askToJoin(
       Room room, Config config, String code, String ip);
+  Future<WebSocket?> join(JoinedRoom room);
 
   /// Must be joined to that room
   Future<JoinedRoom> getRoomDetails(JoinedRoom room);
@@ -55,7 +58,25 @@ class RestClient implements Client {
         code: code, personDetails: config.personDetails, body: {'ip': ip});
     if (res.hasError) return null;
     return JoinedRoom.fromMap(
-        res.parsedResponse!['room'] as Map<String, Object?>);
+      res.parsedResponse!['room'] as Map<String, Object?>,
+      idInRoom: res.parsedResponse!['code'] as String?,
+    );
+  }
+
+  @override
+  Future<WebSocket?> join(JoinedRoom room) async {
+    if (room.owner == null) {
+      return room.webSocket;
+    }
+    try {
+      final ws = await WebSocket.connect(
+          'ws://${room.owner!.ip}/room/${room.id}',
+          headers: {'code': room.idInRoom});
+      room.webSocket = ws;
+      return ws;
+    } catch (e) {
+      return null;
+    }
   }
 
   @override

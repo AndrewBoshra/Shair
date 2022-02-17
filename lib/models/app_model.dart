@@ -11,7 +11,7 @@ import 'package:shair/data/room.dart';
 ///
 class AppModel extends ChangeNotifier {
   Set<Room> _availableRooms = {};
-  final Set<JoinedRoom> _myRooms = {};
+  final Set<OwnedRoom> _myRooms = {};
   final Set<JoinedRoom> _joinedRooms = {};
 
   //*****************************************/
@@ -38,7 +38,7 @@ class AppModel extends ChangeNotifier {
   UnmodifiableSetView<Room> get availableRooms =>
       UnmodifiableSetView(_availableRooms);
 
-  UnmodifiableSetView<JoinedRoom> get myRooms => UnmodifiableSetView(_myRooms);
+  UnmodifiableSetView<OwnedRoom> get myRooms => UnmodifiableSetView(_myRooms);
 
   UnmodifiableSetView<JoinedRoom> get joinedRooms =>
       UnmodifiableSetView(_joinedRooms);
@@ -50,7 +50,7 @@ class AppModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addRoomToMyRooms(JoinedRoom room) {
+  void addRoomToMyRooms(OwnedRoom room) {
     _myRooms.add(room);
     notifyListeners();
   }

@@ -5,9 +5,10 @@ import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/services/generator.dart';
 
 class JoinRequest extends IActionRequired {
-  final JoinedRoom room;
+  final OwnedRoom room;
   final PersonDetails personDetails;
   final String code;
 
@@ -20,12 +21,17 @@ class JoinRequest extends IActionRequired {
   FutureOr<JoinResponse> respond() async {
     bool? accepted =
         await Dialogs.showJoinRequestDialog(RootNavigator.nav!.context, this);
-
-    return JoinResponse(accepted ?? false);
+    String? code;
+    if (accepted == true) {
+      code = Generator.uid;
+      room.add(code);
+    }
+    return JoinResponse(accepted ?? false, code: code);
   }
 }
 
 class JoinResponse extends IActionResponse {
   final bool isAccepted;
-  JoinResponse(this.isAccepted);
+  final String? code;
+  JoinResponse(this.isAccepted, {this.code});
 }

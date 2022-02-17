@@ -1,14 +1,15 @@
+import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
 
-// class RoomUser {
-//   String userId;
-//   RoomUser({
-//     required this.userId,
-//   });
-// }
+class RoomUser {
+  RoomUser({this.code, this.webSocket});
+  WebSocket? webSocket;
+  String? code;
+}
 
 class DownloadableFile {
   late String url;
@@ -74,13 +75,6 @@ class Room {
     this.id = id ?? Generator.uid;
   }
 
-  Room.empty()
-      : id = '',
-        isLocked = true,
-        image = null,
-        name = '',
-        owner = Device('');
-
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
   Map<String, Object?> toMap() {
@@ -101,8 +95,6 @@ class Room {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -111,6 +103,8 @@ class Room {
 
   @override
   int get hashCode => id.hashCode;
+
+  bool get isOwned => false;
 }
 
 /// a room which is either joined or created by this user.
@@ -121,28 +115,20 @@ class JoinedRoom extends Room {
   JoinedRoom({
     required String name,
     required bool isLocked,
-    this.participants = const {},
     Device? owner,
     String? id,
     String? image,
+    this.webSocket,
   }) : super(
             id: id, image: image, name: name, isLocked: isLocked, owner: owner);
-
-  JoinedRoom.empty()
-      : participants = {},
-        super.empty();
-
-  Set<Device> participants = {};
 
   /// Current Device id in this room.
   String? idInRoom;
   Set<DownloadableFile> _files = {};
+  WebSocket? webSocket;
 
   factory JoinedRoom.fromMap(Map<String, dynamic> map, {String? idInRoom}) {
     final room = Room.fromMap(map) as JoinedRoom;
-    final participantsRaw = (map['participants'] ?? []) as List;
-    room.participants =
-        participantsRaw.map((map) => Device.fromMap(map)).toSet();
     room.idInRoom = idInRoom;
     final filesRaw = (map['files'] ?? []) as List;
     room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
@@ -151,7 +137,7 @@ class JoinedRoom extends Room {
   ///////////////////////
   //       Getters     //
   ///////////////////////
-  bool get isOwned => owner == null;
+
   get files => _files;
   void addFile(DownloadableFile file) {
     _files.add(file);
@@ -159,5 +145,38 @@ class JoinedRoom extends Room {
 
   void removeFile(DownloadableFile file) {
     _files.remove(file);
+  }
+}
+
+class OwnedRoom extends JoinedRoom {
+  OwnedRoom({
+    required String name,
+    required bool isLocked,
+    Set<RoomUser> participants = const {},
+    Device? owner,
+    String? id,
+    String? image,
+  }) : super(
+          name: name,
+          isLocked: isLocked,
+          id: id,
+          image: image,
+          owner: owner,
+        );
+
+  Set<RoomUser> _participants = {};
+  UnmodifiableSetView<RoomUser> get participants =>
+      UnmodifiableSetView(_participants);
+
+  @override
+  bool get isOwned => true;
+
+  bool isInRoom(String code) {
+    return _participants.any((u) => u.code == code);
+  }
+
+  ///add new user to this room with given code
+  void add(String code) {
+    _participants.add(RoomUser(code: code));
   }
 }
