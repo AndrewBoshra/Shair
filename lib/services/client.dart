@@ -11,10 +11,11 @@ import 'package:shair/services/network_devices.dart';
 abstract class Client {
   Future<List<Room>?> getRooms(Device device);
   Future<bool> askHostToShareFile(PlatformFile file, Room room);
-  Future<Room?> askToJoin(Room room, Config config);
+  Future<JoinedRoom?> askToJoin(
+      Room room, Config config, String code, String ip);
 
   /// Must be joined to that room
-  Future<Room> getRoomDetails(Room room);
+  Future<JoinedRoom> getRoomDetails(JoinedRoom room);
   Future<void> notifyParticipantsAboutFile(PlatformFile file, Room room);
 }
 
@@ -48,18 +49,17 @@ class RestClient implements Client {
   }
 
   @override
-  Future<Room?> askToJoin(Room room, Config config) async {
-    final res = await _api.post(
-      '${room.owner!.url}/room/${room.id}/join',
-      code: room.idInRoom,
-      personDetails: config.personDetails,
-    );
+  Future<JoinedRoom?> askToJoin(
+      Room room, Config config, String code, String ip) async {
+    final res = await _api.post('${room.owner!.url}/room/${room.id}/join',
+        code: code, personDetails: config.personDetails, body: {'ip': ip});
     if (res.hasError) return null;
-    return Room.fromMap(res.parsedResponse!['room'] as Map<String, Object?>);
+    return JoinedRoom.fromMap(
+        res.parsedResponse!['room'] as Map<String, Object?>);
   }
 
   @override
-  Future<Room> getRoomDetails(Room room) async {
+  Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
     //owned by this device
     if (room.owner == null) return room;
 
@@ -68,7 +68,7 @@ class RestClient implements Client {
     if (res.hasError || res.response!.statusCode != 200) {
       throw Exception('couldn\'t access room $room');
     }
-    return Room.fromMap(res.parsedResponse!);
+    return JoinedRoom.fromMap(res.parsedResponse!);
   }
 }
 

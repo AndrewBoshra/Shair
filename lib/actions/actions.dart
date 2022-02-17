@@ -7,7 +7,7 @@ import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/root_nav.dart';
 
 class JoinRequest extends IActionRequired {
-  final Room room;
+  final JoinedRoom room;
   final PersonDetails personDetails;
   final String code;
 
@@ -20,6 +20,7 @@ class JoinRequest extends IActionRequired {
   FutureOr<JoinResponse> respond() async {
     bool? accepted =
         await Dialogs.showJoinRequestDialog(RootNavigator.nav!.context, this);
+
     return JoinResponse(accepted ?? false);
   }
 }

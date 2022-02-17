@@ -20,7 +20,7 @@ class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
 
-  Set<Room> get _rooms => _appModel.myRooms;
+  Set<JoinedRoom> get _rooms => _appModel.myRooms;
 
   // MiddleWares
   shelf.Handler _auth(innerHandler) {
@@ -36,8 +36,8 @@ class ProtectedRoutes {
   shelf.Handler _validateRoom(innerHandler) {
     return (request) {
       final roomId = request.params['id'];
-      final room =
-          _rooms.firstWhere((room) => room.id == roomId, orElse: Room.empty);
+      final room = _rooms.firstWhere((room) => room.id == roomId,
+          orElse: JoinedRoom.empty);
       if (!room.isValid) {
         return AppResponse.notFound({});
       }
@@ -75,7 +75,7 @@ class ProtectedRoutes {
   //       Helpers        //
   //////////////////////////
 
-  Room? _getRoomWithId(String roomId) {
+  JoinedRoom? _getRoomWithId(String roomId) {
     final matchingRooms = _rooms.where((room) => room.id == roomId);
     if (matchingRooms.isEmpty) null;
     return matchingRooms.first;
@@ -98,7 +98,7 @@ class ProtectedRoutes {
 
 class RestServer extends Server {
   final AppModel _appModel;
-  Set<Room> get _rooms => _appModel.myRooms;
+  Set<JoinedRoom> get _rooms => _appModel.myRooms;
   late shelf_router.Router router;
   HttpServer? _server;
 

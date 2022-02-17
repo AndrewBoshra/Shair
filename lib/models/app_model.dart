@@ -11,8 +11,8 @@ import 'package:shair/data/room.dart';
 ///
 class AppModel extends ChangeNotifier {
   Set<Room> _availableRooms = {};
-  final Set<Room> _myRooms = {};
-  final Set<Room> _joinedRooms = {};
+  final Set<JoinedRoom> _myRooms = {};
+  final Set<JoinedRoom> _joinedRooms = {};
 
   //*****************************************/
   ///Actions Stream used when the server requires an action to be taken from the user
@@ -38,24 +38,24 @@ class AppModel extends ChangeNotifier {
   UnmodifiableSetView<Room> get availableRooms =>
       UnmodifiableSetView(_availableRooms);
 
-  UnmodifiableSetView<Room> get myRooms => UnmodifiableSetView(_myRooms);
+  UnmodifiableSetView<JoinedRoom> get myRooms => UnmodifiableSetView(_myRooms);
 
-  UnmodifiableSetView<Room> get joinedRooms =>
+  UnmodifiableSetView<JoinedRoom> get joinedRooms =>
       UnmodifiableSetView(_joinedRooms);
 
-  Set<Room> get accessableRooms => {...joinedRooms, ..._myRooms};
+  Set<Room> get accessibleRooms => {...joinedRooms, ..._myRooms};
 
   set availableRooms(Set<Room> rooms) {
     _availableRooms = rooms;
     notifyListeners();
   }
 
-  void addRoomToMyRooms(Room room) {
+  void addRoomToMyRooms(JoinedRoom room) {
     _myRooms.add(room);
     notifyListeners();
   }
 
-  void addRoomToJoinedRooms(Room room) {
+  void addRoomToJoinedRooms(JoinedRoom room) {
     _joinedRooms.add(room);
     notifyListeners();
   }
@@ -72,8 +72,8 @@ class AppModel extends ChangeNotifier {
   }
 
   /// methods
-  Room? accessableRoowmWithId(String id) {
-    final rooms = accessableRooms.where((room) => room.id == id);
+  Room? accessibleRoomWithId(String id) {
+    final rooms = accessibleRooms.where((room) => room.id == id);
     return rooms.isNotEmpty ? rooms.first : null;
   }
 

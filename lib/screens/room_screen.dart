@@ -18,7 +18,7 @@ class RoomScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AppModel appModel = Provider.of(context);
-    final room = appModel.accessableRoowmWithId(id);
+    final room = appModel.accessibleRoomWithId(id);
     if (room == null) return const ErrorScreen(error: 'Invalid Room');
     return GradientBackground(
       child: Scaffold(

@@ -19,9 +19,11 @@ class JoinRoomCommand extends ICommand {
     // if (room.owner == null) {
     //   return;
     // }
-    room.idInRoom = Generator.userId;
-    Dialogs.showJoinCodeDialog(context, room.idInRoom ?? '');
-    final joinRes = await client.askToJoin(room, config);
+    String idInRoom = Generator.userId;
+    Dialogs.showJoinCodeDialog(context, idInRoom);
+    final device = await wifiDevices.currentDevice;
+    final joinRes = await client.askToJoin(room, config, idInRoom, device.ip);
+
     if (joinRes == null) {
       SnackBars.show(
         context,
@@ -29,8 +31,8 @@ class JoinRoomCommand extends ICommand {
             context, 'Your Request to join ${room.name} was rejected'),
       );
     } else {
-      appModel.addRoomToJoinedRooms(room);
-      RootNavigator.toRoomScreen(room, pop: true);
+      appModel.addRoomToJoinedRooms(joinRes);
+      RootNavigator.toRoomScreen(joinRes, pop: true);
     }
   }
 }

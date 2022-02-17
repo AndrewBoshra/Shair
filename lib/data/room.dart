@@ -3,17 +3,18 @@ import 'dart:convert';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
 
-class RoomUser {
-  String userId;
-  RoomUser({
-    required this.userId,
-  });
-}
+// class RoomUser {
+//   String userId;
+//   RoomUser({
+//     required this.userId,
+//   });
+// }
 
 class DownloadableFile {
   late String url;
   int? size;
   late String id;
+
   DownloadableFile({
     required this.id,
     required this.url,
@@ -33,6 +34,25 @@ class DownloadableFile {
 
   @override
   int get hashCode => url.hashCode;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'url': url,
+      'size': size,
+      'id': id,
+    };
+  }
+
+  factory DownloadableFile.fromMap(Map<String, dynamic> map) {
+    return DownloadableFile(
+      url: map['url'],
+      size: map['size']?.toInt(),
+      id: map['id'],
+    );
+  }
+
+  factory DownloadableFile.fromJson(String source) =>
+      DownloadableFile.fromMap(json.decode(source));
 }
 
 class Room {
@@ -42,37 +62,23 @@ class Room {
   final String? image;
 
   /// this is null in case this device is the owner of this room
-  final Device? owner;
-  List<Device> participants;
-
-  /// Current Device id in this room.
-  String? idInRoom;
-  final Set<DownloadableFile> _files = {};
+  Device? owner;
 
   Room({
     String? id,
     required this.name,
     required this.isLocked,
     this.image,
-    this.participants = const [],
     this.owner,
   }) {
     this.id = id ?? Generator.uid;
   }
-  factory Room.owned({
-    String? id,
-    required String name,
-    required bool isLocked,
-    String? image,
-  }) =>
-      Room(isLocked: isLocked, name: name, id: id, image: image);
 
   Room.empty()
       : id = '',
         isLocked = true,
         image = null,
         name = '',
-        participants = [],
         owner = Device('');
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
@@ -83,28 +89,19 @@ class Room {
       'name': name,
       'isLocked': isLocked,
       'image': image,
-      'device': owner?.toMap(),
-      'participants': participants.map((e) => e.toMap()).toList()
     };
   }
 
   factory Room.fromMap(Map<String, dynamic> map, {Device? owner}) {
-    final participantsRaw = (map['participants'] ?? []) as List;
-    final participants = participantsRaw.map((p) => Device.fromMap(p));
-
     return Room(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       isLocked: map['isLocked'] == 'true',
       image: map['image'],
-      participants: participants.toList(),
-      owner: owner,
     );
   }
 
   String toJson() => json.encode(toMap());
-
-  factory Room.fromJson(String source) => Room.fromMap(json.decode(source));
 
   @override
   bool operator ==(Object other) {
@@ -114,7 +111,47 @@ class Room {
 
   @override
   int get hashCode => id.hashCode;
+}
 
+/// a room which is either joined or created by this user.
+///
+/// the main difference between this class and [Room] is that you can access
+/// files and inRoomCode
+class JoinedRoom extends Room {
+  JoinedRoom({
+    required String name,
+    required bool isLocked,
+    this.participants = const {},
+    Device? owner,
+    String? id,
+    String? image,
+  }) : super(
+            id: id, image: image, name: name, isLocked: isLocked, owner: owner);
+
+  JoinedRoom.empty()
+      : participants = {},
+        super.empty();
+
+  Set<Device> participants = {};
+
+  /// Current Device id in this room.
+  String? idInRoom;
+  Set<DownloadableFile> _files = {};
+
+  factory JoinedRoom.fromMap(Map<String, dynamic> map, {String? idInRoom}) {
+    final room = Room.fromMap(map) as JoinedRoom;
+    final participantsRaw = (map['participants'] ?? []) as List;
+    room.participants =
+        participantsRaw.map((map) => Device.fromMap(map)).toSet();
+    room.idInRoom = idInRoom;
+    final filesRaw = (map['files'] ?? []) as List;
+    room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
+    return room;
+  }
+  ///////////////////////
+  //       Getters     //
+  ///////////////////////
+  bool get isOwned => owner == null;
   get files => _files;
   void addFile(DownloadableFile file) {
     _files.add(file);

@@ -69,7 +69,7 @@ class JoinRequestDialog extends StatelessWidget {
               children: [
                 RoomAvatar(imageUrl: person.character),
                 Text(
-                  '     ${person.name?.capitalize()} wants to join',
+                  '     ${person.name?.capitalize()} wants to join ${request.room.name}',
                   style: textTheme.subtitle1,
                 ),
               ],

@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           _buildHomeScreen(context, config, appTheme, textTheme),
-          if (appModel.accessableRooms.isNotEmpty)
+          if (appModel.accessibleRooms.isNotEmpty)
             _buildOpenedRooms(appModel, appTheme, textTheme),
         ],
       ),
