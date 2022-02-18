@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:shair/actions/actions.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/models/app_model.dart';
+import 'package:shair/services/socket.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
@@ -87,10 +88,6 @@ class ProtectedRoutes {
     return AppResponse.ok({...room.toMap(), 'code': joinResponse.code});
   }
 
-  final _channelHandler = webSocketHandler((WebSocketChannel ws) {
-    ws.sink.add('data');
-  });
-
   //////////////////////////
   //       Helpers        //
   //////////////////////////
@@ -115,7 +112,7 @@ class ProtectedRoutes {
     );
     _router.all(
       '/<id>/channel',
-      joinedRoomPipe.addHandler(_channelHandler),
+      joinedRoomPipe.addHandler(SocketServer(_appModel).handler),
     );
   }
 }

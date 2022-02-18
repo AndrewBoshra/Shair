@@ -7,6 +7,11 @@ import 'package:shair/services/server.dart';
 abstract class ICommand {
   execute();
 
+  static AppModel get sAppModel => AppGlobals.appModel;
+  static Server get sServer => AppGlobals.server;
+  static Client get sClient => AppGlobals.client;
+  static WifiNetworkDevices get sWifiDevices => AppGlobals.wifiDevices;
+
   AppModel get appModel => AppGlobals.appModel;
   Server get server => AppGlobals.server;
   Client get client => AppGlobals.client;

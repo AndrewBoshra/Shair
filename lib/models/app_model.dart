@@ -11,7 +11,16 @@ import 'package:shair/data/room.dart';
 ///
 class AppModel extends ChangeNotifier {
   Set<Room> _availableRooms = {};
-  final Set<OwnedRoom> _myRooms = {};
+  final Set<OwnedRoom> _myRooms = {
+    OwnedRoom(
+      isLocked: true,
+      name: 'Test',
+      id: '1',
+      participants: {
+        RoomUser(code: '123456'),
+      },
+    )
+  };
   final Set<JoinedRoom> _joinedRooms = {};
 
   //*****************************************/
@@ -43,7 +52,7 @@ class AppModel extends ChangeNotifier {
   UnmodifiableSetView<JoinedRoom> get joinedRooms =>
       UnmodifiableSetView(_joinedRooms);
 
-  Set<Room> get accessibleRooms => {...joinedRooms, ..._myRooms};
+  Set<JoinedRoom> get accessibleRooms => {...joinedRooms, ..._myRooms};
 
   set availableRooms(Set<Room> rooms) {
     _availableRooms = rooms;
@@ -72,167 +81,20 @@ class AppModel extends ChangeNotifier {
   }
 
   /// methods
-  Room? accessibleRoomWithId(String id) {
+  JoinedRoom? accessibleRoomWithId(String id) {
     final rooms = accessibleRooms.where((room) => room.id == id);
+    return rooms.isNotEmpty ? rooms.first : null;
+  }
+
+  OwnedRoom? ownedRoomWithId(String id) {
+    final rooms = myRooms.where((room) => room.id == id);
     return rooms.isNotEmpty ? rooms.first : null;
   }
 
   static AppModel of(BuildContext c, {bool listen = true}) =>
       Provider.of(c, listen: listen);
+
+  void notify() {
+    notifyListeners();
+  }
 }
-
-// import 'dart:collection';
-// import 'dart:io';
-
-// import 'package:file_picker/file_picker.dart';
-// import 'package:flutter/material.dart';
-// import 'package:shair/data/room.dart';
-// import 'package:shair/data/shared_file.dart';
-// import 'package:shair/models/client.dart';
-// import 'package:shair/models/generator.dart';
-// import 'package:shair/models/network_devices.dart';
-// import 'package:shair/models/server.dart';
-
-// const _kPollDuration = Duration(milliseconds: 2000);
-
-// abstract class AppModel extends ChangeNotifier {
-//   UnmodifiableSetView<Room> get rooms;
-//   UnmodifiableSetView<Room> get myRooms;
-//   UnmodifiableSetView<Room> get joinedRooms;
-//   Future<Room> create(String name, String? image, bool isLocked);
-//   Future<bool> join(Room room);
-//   Future<void> leave(Room room);
-//   Future<void> shareFile(PlatformFile file, Room room);
-//   Future<void> download(SharedFile file);
-//   void pollRooms();
-//   void stopPollingRooms();
-//   Room? getJoinedRoomWithId(String id);
-// }
-
-// class AppModelRest extends AppModel {
-//   final Client client;
-//   final Server server;
-//   bool _ispollingRooms = false;
-//   NetworkDevices networkDevices;
-
-//   /// all rooms available on the network
-//   ///
-//   Set<Room> _rooms = {};
-
-//   /// all rooms that this user joined
-//   ///
-//   final Set<Room> _joinedRooms = {};
-
-//   /// all rooms that created by this user
-//   ///
-//   final Set<Room> _myRooms = {};
-
-//   AppModelRest(this.client, this.server, this.networkDevices);
-
-//   Future<List<Room>> _fetchRooms() async {
-//     _rooms = {};
-//     final devices = await networkDevices.devices;
-//     for (final device in devices) {
-//       if (await client.isActive(device)) {
-//         final deviceRooms = await client.getRooms(device);
-//         _rooms.addAll(deviceRooms);
-//       }
-//     }
-//     return _rooms.toList();
-//   }
-
-//   @override
-//   UnmodifiableSetView<Room> get rooms => UnmodifiableSetView(_rooms);
-//   @override
-//   UnmodifiableSetView<Room> get joinedRooms =>
-//       UnmodifiableSetView({..._joinedRooms, ..._myRooms});
-//   @override
-//   UnmodifiableSetView<Room> get myRooms => UnmodifiableSetView<Room>(_myRooms);
-
-//   @override
-//   Room? getJoinedRoomWithId(String id) {
-//     final room =
-//         joinedRooms.firstWhere((room) => room.id == id, orElse: Room.empty);
-//     return room.isValid ? room : null;
-//   }
-
-//   @override
-//   Future<void> download(SharedFile file) {
-//     // TODO: implement download
-//     throw UnimplementedError();
-//   }
-
-//   @override
-//   Future<bool> join(Room room) async {
-//     // if (room.owner == await networkDevices.currentDevice) {
-//     //   return true;
-//     // }
-//     room.idInRoom = Generator.userId;
-//     final acceptance = await client.askToJoin(room);
-
-//     if (acceptance.isAccepted) {
-//       room.idInRoom = acceptance.idInRoom;
-//       // To get files in this room
-//       final fRoom = await client.getRoomDetails(room);
-//       _joinedRooms.add(fRoom);
-//       return true;
-//     }
-//     return false;
-//   }
-
-//   @override
-//   Future<void> leave(Room room) {
-//     // TODO: implement leave
-//     throw UnimplementedError();
-//   }
-
-//   Future<void> _serveFile(PlatformFile file, Room room) async {
-//     await server.shareFile(File(file.path!), room);
-//   }
-
-//   @override
-//   Future<void> shareFile(PlatformFile file, Room room) async {
-//     print('share : ${file.path} ${file.size}');
-//     if (room.owner == await networkDevices.currentDevice) {
-//       await _serveFile(file, room);
-//       await client.notifyParticipantsAboutFile(file, room);
-//     } else {
-//       if (await client.askHostToShareFile(file, room)) {
-//         await _serveFile(file, room);
-//       }
-//     }
-//   }
-
-//   @override
-//   void pollRooms() {
-//     if (_ispollingRooms) return;
-//     _ispollingRooms = true;
-//     Future.doWhile(() async {
-//       await _fetchRooms();
-//       debugPrint('finished _fetchRooms');
-//       notifyListeners();
-//       await Future.delayed(_kPollDuration);
-//       return _ispollingRooms;
-//     });
-//   }
-
-//   @override
-//   void stopPollingRooms() {
-//     _ispollingRooms = false;
-//     debugPrint('stopped polling');
-//   }
-
-//   @override
-//   Future<Room> create(String name, String? image, bool isLocked) async {
-//     final room = Room(
-//       await networkDevices.currentDevice,
-//       name: name,
-//       isLocked: isLocked,
-//       image: image,
-//     );
-//     if (server.createRoom(room)) {
-//       _myRooms.add(room);
-//     }
-//     return room;
-//   }
-// }

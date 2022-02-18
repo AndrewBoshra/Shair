@@ -4,10 +4,11 @@ import 'dart:io';
 
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomUser {
   RoomUser({this.code, this.webSocket});
-  WebSocket? webSocket;
+  WebSocketChannel? webSocket;
   String? code;
 }
 
@@ -156,7 +157,8 @@ class OwnedRoom extends JoinedRoom {
     Device? owner,
     String? id,
     String? image,
-  }) : super(
+  })  : _participants = participants,
+        super(
           name: name,
           isLocked: isLocked,
           id: id,
@@ -178,5 +180,12 @@ class OwnedRoom extends JoinedRoom {
   ///add new user to this room with given code
   void add(String code) {
     _participants.add(RoomUser(code: code));
+  }
+
+  void signWebSocket(String code, WebSocketChannel ws) {
+    if (isInRoom(code)) {
+      final participant = _participants.firstWhere((p) => p.code == code);
+      participant.webSocket = ws;
+    }
   }
 }
