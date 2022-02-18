@@ -16,9 +16,9 @@ class JoinRoomCommand extends ICommand {
   @override
   execute() async {
     //TODO uncomment this
-    // if (room.owner == null) {
-    //   return;
-    // }
+    if (room.isOwned) {
+      return;
+    }
     String idInRoom = Generator.userId;
     Dialogs.showJoinCodeDialog(context, idInRoom);
     final device = await wifiDevices.currentDevice;
@@ -32,7 +32,6 @@ class JoinRoomCommand extends ICommand {
       );
     } else {
       appModel.addRoomToJoinedRooms(joinRes);
-
       RootNavigator.toRoomScreen(joinRes, pop: true);
     }
   }

@@ -98,11 +98,11 @@ class Room {
 
   factory Room.fromMap(Map<String, dynamic> map, {Device? owner}) {
     return Room(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      isLocked: map['isLocked'] == 'true',
-      image: map['image'],
-    );
+        id: map['id'] ?? '',
+        name: map['name'] ?? '',
+        isLocked: map['isLocked'] == 'true',
+        image: map['image'],
+        owner: owner);
   }
 
   @override
@@ -138,7 +138,14 @@ class JoinedRoom extends Room {
   WebSocket? webSocket;
 
   factory JoinedRoom.fromMap(Map<String, dynamic> map, {String? idInRoom}) {
-    final room = Room.fromMap(map) as JoinedRoom;
+    final _room = Room.fromMap(map);
+    final room = JoinedRoom(
+      name: _room.name,
+      isLocked: _room.isLocked,
+      id: _room.id,
+      image: _room.image,
+      owner: _room.owner,
+    );
     room.idInRoom = idInRoom;
     final filesRaw = (map['files'] ?? []) as List;
     room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
@@ -163,12 +170,10 @@ class OwnedRoom extends JoinedRoom {
   OwnedRoom({
     required String name,
     required bool isLocked,
-    Set<RoomUser> participants = const {},
     Device? owner,
     String? id,
     String? image,
-  })  : _participants = participants,
-        super(
+  }) : super(
           name: name,
           isLocked: isLocked,
           id: id,
@@ -176,9 +181,10 @@ class OwnedRoom extends JoinedRoom {
           owner: owner,
         );
 
-  Set<RoomUser> _participants = {};
+  final Set<RoomUser> _participants = {};
+
   UnmodifiableSetView<RoomUser> get participants =>
-      UnmodifiableSetView(_participants);
+      UnmodifiableSetView<RoomUser>(_participants);
 
   @override
   bool get isOwned => true;

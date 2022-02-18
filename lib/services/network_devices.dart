@@ -9,6 +9,7 @@ const kPort = 4560;
 class Device {
   final String ip;
   String get url => 'http://$ip:$kPort';
+  String get socketUrl => 'ws://$ip:$kPort';
   Device(this.ip);
 
   Map<String, dynamic> toMap() {
@@ -57,7 +58,8 @@ class WifiNetworkDevices implements NetworkDevices {
 
     final hosts = await stream.toList();
     _devices.addAll(hosts.map((host) => Device(host.ip)));
-    _devices.add(Device(ip));
+    // _devices.add(Device(ip));
+    //TODO remove current device ip from hosts
     return _devices.toList();
   }
 

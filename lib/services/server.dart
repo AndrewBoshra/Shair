@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:shair/actions/actions.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/models/app_model.dart';
+import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
@@ -144,10 +145,10 @@ class RestServer extends Server {
   @override
   Future<void> start() async {
     if (_server != null) return;
-    // _server = await io.serve(router, '0.0.0.0', kPort);
+    _server = await io.serve(router, '0.0.0.0', kPort);
     //TODO change this port to kPort this is only for dev
-    _server =
-        await io.serve(shelf.logRequests().addHandler(router), '0.0.0.0', 3000);
+    // _server =
+    // await io.serve(shelf.logRequests().addHandler(router), '0.0.0.0', 3000);
     return;
   }
 

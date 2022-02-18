@@ -8,18 +8,15 @@ import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 abstract class Client {
   Future<List<Room>?> getRooms(Device device);
-  Future<bool> askHostToShareFile(PlatformFile file, Room room);
   Future<JoinedRoom?> askToJoin(
       Room room, Config config, String code, String ip);
   Future<WebSocket?> join(JoinedRoom room);
 
   /// Must be joined to that room
   Future<JoinedRoom> getRoomDetails(JoinedRoom room);
-  Future<void> notifyParticipantsAboutFile(PlatformFile file, Room room);
 }
 
 class RestClient implements Client {
@@ -36,29 +33,26 @@ class RestClient implements Client {
     final rooms = <Room>[];
     for (final raw in roomsRaw) {
       final room = Room.fromMap(raw, owner: device);
+
       rooms.add(room);
     }
     return rooms;
   }
 
   @override
-  Future<bool> askHostToShareFile(PlatformFile file, Room room) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> notifyParticipantsAboutFile(PlatformFile file, Room room) async {
-    throw UnimplementedError();
-  }
-
-  @override
   Future<JoinedRoom?> askToJoin(
-      Room room, Config config, String code, String ip) async {
+    Room room,
+    Config config,
+    String code,
+    String ip,
+  ) async {
     final res = await _api.post('${room.owner!.url}/room/${room.id}/join',
         code: code, personDetails: config.personDetails, body: {'ip': ip});
+
     if (res.hasError) return null;
+
     return JoinedRoom.fromMap(
-      res.parsedResponse!['room'] as Map<String, Object?>,
+      res.parsedResponse!,
       idInRoom: res.parsedResponse!['code'] as String?,
     );
   }
@@ -70,7 +64,7 @@ class RestClient implements Client {
     }
     try {
       final ws = await WebSocket.connect(
-          'ws://${room.owner!.ip}/room/${room.id}',
+          '${room.owner!.socketUrl}/room/${room.id}',
           headers: {'code': room.idInRoom});
       room.webSocket = ws;
       return ws;

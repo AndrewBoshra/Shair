@@ -16,10 +16,7 @@ class AppModel extends ChangeNotifier {
       isLocked: true,
       name: 'Test',
       id: '1',
-      participants: {
-        RoomUser(code: '123456'),
-      },
-    )
+    )..add('1')
   };
   final Set<JoinedRoom> _joinedRooms = {};
 

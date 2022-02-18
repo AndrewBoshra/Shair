@@ -49,17 +49,18 @@ class RoomAvatar extends StatelessWidget {
   final String? imageUrl;
   @override
   Widget build(BuildContext context) {
-    const placeHolder = AssetImage(ImageAssets.logo);
-    ImageProvider image;
+    return Text('avatar');
+    // const placeHolder = AssetImage(ImageAssets.logo);
+    // ImageProvider image;
 
-    if (imageUrl == null) {
-      image = placeHolder;
-    } else {
-      image = NetworkImage(imageUrl!);
-    }
-    return CircleAvatar(
-      foregroundImage: image,
-      backgroundImage: placeHolder,
-    );
+    // if (imageUrl == null) {
+    //   image = placeHolder;
+    // } else {
+    //   image = NetworkImage(imageUrl!);
+    // }
+    // return CircleAvatar(
+    //   foregroundImage: image,
+    //   backgroundImage: placeHolder,
+    // );
   }
 }
