@@ -112,7 +112,7 @@ class ProtectedRoutes {
     );
     _router.all(
       '/<id>/channel',
-      joinedRoomPipe.addHandler(SocketServer(_appModel).handler),
+      joinedRoomPipe.addHandler(SocketServer().handler),
     );
   }
 }

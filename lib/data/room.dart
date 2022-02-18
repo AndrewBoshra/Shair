@@ -4,12 +4,21 @@ import 'dart:io';
 
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:shair/services/socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomUser {
   RoomUser({this.code, this.webSocket});
   WebSocketChannel? webSocket;
   String? code;
+
+  @override
+  operator ==(Object other) {
+    return other is RoomUser && other.webSocket == webSocket;
+  }
+
+  @override
+  int get hashCode => webSocket.hashCode;
 }
 
 class DownloadableFile {
@@ -31,7 +40,7 @@ class DownloadableFile {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is DownloadableFile && other.url == url;
+    return other is DownloadableFile && other.id == id;
   }
 
   @override
@@ -139,9 +148,10 @@ class JoinedRoom extends Room {
   //       Getters     //
   ///////////////////////
 
-  get files => _files;
-  void addFile(DownloadableFile file) {
-    _files.add(file);
+  UnmodifiableSetView<DownloadableFile> get files =>
+      UnmodifiableSetView<DownloadableFile>(_files);
+  bool addFile(DownloadableFile file) {
+    return _files.add(file);
   }
 
   void removeFile(DownloadableFile file) {
@@ -178,14 +188,24 @@ class OwnedRoom extends JoinedRoom {
   }
 
   ///add new user to this room with given code
-  void add(String code) {
-    _participants.add(RoomUser(code: code));
+  bool add(String code) {
+    return _participants.add(RoomUser(code: code));
   }
 
-  void signWebSocket(String code, WebSocketChannel ws) {
+  bool signWebSocket(String code, WebSocketChannel ws) {
     if (isInRoom(code)) {
       final participant = _participants.firstWhere((p) => p.code == code);
+      if (participant.webSocket != null) return false;
       participant.webSocket = ws;
+      return true;
+    }
+    return false;
+  }
+
+  void notifyAll(SocketMessage action) {
+    for (final participant in _participants) {
+      final messageRaw = jsonEncode(action.toMap());
+      participant.webSocket?.sink.add(messageRaw);
     }
   }
 }

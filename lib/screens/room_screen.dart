@@ -67,7 +67,13 @@ class RoomScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildFiles(Room room) {
-    return ListView();
+  Widget _buildFiles(JoinedRoom room) {
+    return ListView(
+      children: room.files
+          .map((e) => ListTile(
+                title: Text(e.url),
+              ))
+          .toList(),
+    );
   }
 }
