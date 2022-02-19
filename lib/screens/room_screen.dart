@@ -5,6 +5,7 @@ import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/screens/error.dart';
+import 'package:shair/services/socket.dart';
 import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/gradient.dart';
@@ -58,12 +59,10 @@ class RoomScreen extends StatelessWidget {
     );
   }
 
-  void _upload(BuildContext context, Room room) async {
+  void _upload(BuildContext context, JoinedRoom room) async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
-      for (final file in result.files) {
-        ShareFileCommand(file, room).execute();
-      }
+      ShareFilesCommand(room, result.files).execute();
     }
   }
 

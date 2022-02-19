@@ -51,10 +51,8 @@ class RestClient implements Client {
 
     if (res.hasError) return null;
 
-    return JoinedRoom.fromMap(
-      res.parsedResponse!,
-      idInRoom: res.parsedResponse!['code'] as String?,
-    );
+    return JoinedRoom.fromMap(res.parsedResponse!,
+        idInRoom: res.parsedResponse!['code'] as String?, owner: room.owner);
   }
 
   @override
@@ -64,11 +62,12 @@ class RestClient implements Client {
     }
     try {
       final ws = await WebSocket.connect(
-          '${room.owner!.socketUrl}/room/${room.id}',
+          '${room.owner!.socketUrl}/room/${room.id}/channel',
           headers: {'code': room.idInRoom});
       room.webSocket = ws;
       return ws;
     } catch (e) {
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -78,8 +77,10 @@ class RestClient implements Client {
     //owned by this device
     if (room.owner == null) return room;
 
-    final res = await _api.get('${room.owner!.url}/rooms/${room.id}',
-        headers: {'code': room.idInRoom!});
+    final res = await _api.get(
+      '${room.owner!.url}/room/${room.id}',
+      code: room.idInRoom,
+    );
     if (res.hasError || res.response!.statusCode != 200) {
       throw Exception('couldn\'t access room $room');
     }

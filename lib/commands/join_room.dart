@@ -4,9 +4,10 @@ import 'package:shair/commands/abstract_command.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/dialogs/show_dialog.dart';
-import 'package:shair/dialogs/snakbars.dart';
+import 'package:shair/dialogs/snackbars.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/services/generator.dart';
+import 'package:shair/services/socket.dart';
 
 class JoinRoomCommand extends ICommand {
   final Room room;
@@ -15,7 +16,6 @@ class JoinRoomCommand extends ICommand {
   Config get config => context.read<Config>();
   @override
   execute() async {
-    //TODO uncomment this
     if (room.isOwned) {
       return;
     }
@@ -31,6 +31,9 @@ class JoinRoomCommand extends ICommand {
             context, 'Your Request to join ${room.name} was rejected'),
       );
     } else {
+      joinRes.webSocket = await client.join(joinRes);
+      if (joinRes.webSocket == null) return;
+      InitSocketMessage.formConfig(config, joinRes).execute();
       appModel.addRoomToJoinedRooms(joinRes);
       RootNavigator.toRoomScreen(joinRes, pop: true);
     }

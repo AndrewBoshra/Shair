@@ -65,11 +65,11 @@ class JoinRequestDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
+            Wrap(
               children: [
                 RoomAvatar(imageUrl: person.character),
                 Text(
-                  '     ${person.name?.capitalize()} wants to join ${request.room.name}',
+                  '${person.name?.capitalize()} wants to join ${request.room.name}',
                   style: textTheme.subtitle1,
                 ),
               ],

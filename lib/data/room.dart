@@ -23,16 +23,26 @@ class RoomUser {
 
 class DownloadableFile {
   late String url;
+  String name;
   int? size;
   late String id;
 
+  String? path;
+
   DownloadableFile({
     required this.id,
+    required this.name,
     required this.url,
     this.size,
+    this.path,
   });
 
-  DownloadableFile.fromBaseUrl({required String baseUrl, int? size}) {
+  DownloadableFile.newFile(
+      {required this.url, required this.name, this.size, this.path})
+      : id = Generator.uid;
+
+  DownloadableFile.fromBaseUrl(
+      {required String baseUrl, required this.name, int? size}) {
     id = Generator.uid;
     url = baseUrl + id;
   }
@@ -51,6 +61,7 @@ class DownloadableFile {
       'url': url,
       'size': size,
       'id': id,
+      'name': name,
     };
   }
 
@@ -59,11 +70,9 @@ class DownloadableFile {
       url: map['url'],
       size: map['size']?.toInt(),
       id: map['id'],
+      name: map['name'],
     );
   }
-
-  factory DownloadableFile.fromJson(String source) =>
-      DownloadableFile.fromMap(json.decode(source));
 }
 
 class Room {
@@ -137,14 +146,15 @@ class JoinedRoom extends Room {
   Set<DownloadableFile> _files = {};
   WebSocket? webSocket;
 
-  factory JoinedRoom.fromMap(Map<String, dynamic> map, {String? idInRoom}) {
+  factory JoinedRoom.fromMap(Map<String, dynamic> map,
+      {String? idInRoom, Device? owner}) {
     final _room = Room.fromMap(map);
     final room = JoinedRoom(
       name: _room.name,
       isLocked: _room.isLocked,
       id: _room.id,
       image: _room.image,
-      owner: _room.owner,
+      owner: owner ?? _room.owner,
     );
     room.idInRoom = idInRoom;
     final filesRaw = (map['files'] ?? []) as List;
@@ -161,8 +171,18 @@ class JoinedRoom extends Room {
     return _files.add(file);
   }
 
+  void addFiles(Iterable<DownloadableFile> files) {
+    return _files.addAll(files);
+  }
+
   void removeFile(DownloadableFile file) {
     _files.remove(file);
+  }
+
+  void sendToHost(SocketMessage message) {
+    assert(webSocket != null,
+        'trying to send message to host but webSocket is null');
+    webSocket!.add(message.toJson());
   }
 }
 

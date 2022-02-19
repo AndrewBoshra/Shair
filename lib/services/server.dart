@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:shair/actions/actions.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/models/app_model.dart';
@@ -58,6 +59,7 @@ class ProtectedRoutes {
       if (room.isInRoom(userCode)) {
         return innerHandler(request);
       } else {
+        debugPrint('request code is not in room');
         return AppResponse.forbidden({});
       }
     };
@@ -145,7 +147,8 @@ class RestServer extends Server {
   @override
   Future<void> start() async {
     if (_server != null) return;
-    _server = await io.serve(router, '0.0.0.0', kPort);
+    _server = await io.serve(
+        shelf.logRequests().addHandler(router), '0.0.0.0', kPort);
     //TODO change this port to kPort this is only for dev
     // _server =
     // await io.serve(shelf.logRequests().addHandler(router), '0.0.0.0', 3000);
