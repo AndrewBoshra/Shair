@@ -9,17 +9,7 @@ import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
 
-abstract class Client {
-  Future<List<Room>?> getRooms(Device device);
-  Future<JoinedRoom?> askToJoin(
-      Room room, Config config, String code, String ip);
-  Future<WebSocket?> join(JoinedRoom room);
-
-  /// Must be joined to that room
-  Future<JoinedRoom> getRoomDetails(JoinedRoom room);
-}
-
-class RestClient implements Client {
+class RestClient {
   final Api _api = Api();
 
   @override

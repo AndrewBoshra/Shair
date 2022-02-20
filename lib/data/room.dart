@@ -8,17 +8,19 @@ import 'package:shair/services/socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomUser {
-  RoomUser({this.code, this.webSocket});
+  RoomUser({this.name, this.image, this.code, this.webSocket});
   WebSocketChannel? webSocket;
   String? code;
+  String? image;
+  String? name;
 
   @override
   operator ==(Object other) {
-    return other is RoomUser && other.webSocket == webSocket;
+    return other is RoomUser && other.code == code;
   }
 
   @override
-  int get hashCode => webSocket.hashCode;
+  int get hashCode => code.hashCode;
 }
 
 class DownloadableFile {
@@ -161,14 +163,19 @@ class JoinedRoom extends Room {
     room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
     return room;
   }
-  ///////////////////////
-  //       Getters     //
-  ///////////////////////
 
-  UnmodifiableSetView<DownloadableFile> get files =>
-      UnmodifiableSetView<DownloadableFile>(_files);
-  bool addFile(DownloadableFile file) {
-    return _files.add(file);
+  final Set<RoomUser> _participants = {};
+
+  UnmodifiableSetView<RoomUser> get participants =>
+      UnmodifiableSetView<RoomUser>(_participants);
+
+  bool isInRoom(String code) {
+    return _participants.any((u) => u.code == code);
+  }
+
+  ///add new user to this room with given code
+  bool add(String code) {
+    return _participants.add(RoomUser(code: code));
   }
 
   void addFiles(Iterable<DownloadableFile> files) {
@@ -183,6 +190,16 @@ class JoinedRoom extends Room {
     assert(webSocket != null,
         'trying to send message to host but webSocket is null');
     webSocket!.add(message.toJson());
+  }
+
+  ///////////////////////
+  //       Getters     //
+  ///////////////////////
+
+  UnmodifiableSetView<DownloadableFile> get files =>
+      UnmodifiableSetView<DownloadableFile>(_files);
+  bool addFile(DownloadableFile file) {
+    return _files.add(file);
   }
 }
 
@@ -201,37 +218,31 @@ class OwnedRoom extends JoinedRoom {
           owner: owner,
         );
 
-  final Set<RoomUser> _participants = {};
-
-  UnmodifiableSetView<RoomUser> get participants =>
-      UnmodifiableSetView<RoomUser>(_participants);
-
   @override
   bool get isOwned => true;
 
-  bool isInRoom(String code) {
-    return _participants.any((u) => u.code == code);
-  }
-
-  ///add new user to this room with given code
-  bool add(String code) {
-    return _participants.add(RoomUser(code: code));
-  }
-
-  bool signWebSocket(String code, WebSocketChannel ws) {
+  bool signWebSocket(String code, WebSocketChannel ws,
+      {String? name, String? image}) {
     if (isInRoom(code)) {
       final participant = _participants.firstWhere((p) => p.code == code);
       if (participant.webSocket != null) return false;
       participant.webSocket = ws;
+      participant.image = image;
+      participant.name = name;
+      print('say welcome to $name to our Room');
       return true;
     }
     return false;
   }
 
-  void notifyAll(SocketMessage action) {
-    for (final participant in _participants) {
-      final messageRaw = jsonEncode(action.toMap());
-      participant.webSocket?.sink.add(messageRaw);
+  void notifyAll(SocketMessage action) async {
+    try {
+      for (final participant in _participants) {
+        print('will notify ${participant.name} ');
+        participant.webSocket?.sink.add(action.toJson());
+      }
+    } catch (e) {
+      print(e.toString());
     }
   }
 }

@@ -18,8 +18,8 @@ abstract class SocketMessage extends ICommand {
   ///
   /// defaults to false
   final bool notifyHost;
-  final WebSocketChannel? webSocket;
-  SocketMessage(this.room, this.webSocket, this.notifyHost);
+  final WebSocketChannel? senderWebSocket;
+  SocketMessage(this.room, this.senderWebSocket, this.notifyHost);
 
   Map<String, dynamic> toMap();
   String toJson() => jsonEncode(toMap());
@@ -27,24 +27,23 @@ abstract class SocketMessage extends ICommand {
   execute() {
     if (room.isOwned) {
       final _room = room as OwnedRoom;
-      if (ownerExecute(_room)) {
-        _room.notifyAll(this);
-        appModel.notify();
-      }
+      ownerExecute(_room);
     } else {
       joinedExecute(room);
+      if (notifyHost) {
+        room.sendToHost(this);
+      }
     }
+    //update screen
+    appModel.notify();
   }
 
   ///executed if the current device is the host of this room
   ///
   ///if this function returns true this all users will be notified about this action
 
-  bool ownerExecute(OwnedRoom room);
-  @mustCallSuper
-  joinedExecute(JoinedRoom room) {
-    room.sendToHost(this);
-  }
+  ownerExecute(OwnedRoom room);
+  joinedExecute(JoinedRoom room);
 }
 
 class InitSocketMessage extends SocketMessage {
@@ -57,19 +56,23 @@ class InitSocketMessage extends SocketMessage {
     required this.code,
     required JoinedRoom room,
     bool notifyHost = false,
-    WebSocketChannel? webSocket,
-  }) : super(room, webSocket, notifyHost);
+    WebSocketChannel? senderWebSocket,
+  }) : super(room, senderWebSocket, notifyHost);
 
-  factory InitSocketMessage.formConfig(Config config, JoinedRoom room) {
+  factory InitSocketMessage.formConfig(
+      Config config, JoinedRoom room, bool notifyHost) {
     assert(room.idInRoom != null,
         'You must  have inRoomId to be able to send to room host');
     assert(room.webSocket != null,
         'You must connect to socket before you send message to host');
+
     return InitSocketMessage(
-        name: config.name,
-        imageUrl: config.character ?? '',
-        code: room.idInRoom!,
-        room: room);
+      name: config.name,
+      imageUrl: config.character ?? '',
+      code: room.idInRoom!,
+      room: room,
+      notifyHost: notifyHost,
+    );
   }
   @override
   Map<String, dynamic> toMap() {
@@ -85,7 +88,7 @@ class InitSocketMessage extends SocketMessage {
   }
 
   factory InitSocketMessage.fromMap(
-      Map<String, dynamic> map, WebSocketChannel webSocket) {
+      Map<String, dynamic> map, WebSocketChannel? webSocket) {
     final roomId = map['roomId'];
     final room = ICommand.sAppModel.accessibleRoomWithId(roomId);
     if (room == null) {
@@ -96,27 +99,31 @@ class InitSocketMessage extends SocketMessage {
       imageUrl: map['imageUrl'] ?? '',
       code: map['code'] ?? '',
       room: room,
-      webSocket: webSocket,
+      senderWebSocket: webSocket,
     );
   }
 
-  // @override
-  // joinedExecute(JoinedRoom room) {
-  //   // TODO: implement joinedExecute
-  //   super.joinedExecute(room);
-  // }
+  @override
+  ownerExecute(OwnedRoom room) {
+    if (senderWebSocket == null) return;
+    bool added =
+        room.signWebSocket(code, senderWebSocket!, image: imageUrl, name: name);
+    if (added) {
+      room.notifyAll(this);
+    }
+  }
 
   @override
-  bool ownerExecute(OwnedRoom room) {
-    if (webSocket == null) return false;
-    return room.signWebSocket(code, webSocket!);
+  joinedExecute(JoinedRoom room) {
+    //add this user to the room so that he can download files hosted by this user.
+    room.add(code);
   }
 }
 
 abstract class ActionMessage extends SocketMessage {
-  ActionMessage(JoinedRoom room, WebSocketChannel? webSocket,
+  ActionMessage(JoinedRoom room, WebSocketChannel? senderWebSocket,
       [bool notifyHost = false])
-      : super(room, webSocket, notifyHost);
+      : super(room, senderWebSocket, notifyHost);
   String get actionType;
 
   Map<String, dynamic> toMapImpl();
@@ -146,34 +153,43 @@ class ShareFileMessage extends ActionMessage {
     required this.fileUrl,
     required this.fileId,
     required this.size,
-    required WebSocketChannel? webSocket,
+    required WebSocketChannel? senderWebSocket,
     bool notifyHost = false,
-  }) : super(room, webSocket, notifyHost);
+  }) : super(room, senderWebSocket, notifyHost);
   factory ShareFileMessage.fromDownloadableFile(
       DownloadableFile file, JoinedRoom room,
-      [WebSocketChannel? webSocket]) {
+      {WebSocketChannel? webSocket, bool notifyHost = false}) {
     return ShareFileMessage(
       room: room,
       fileUrl: file.url,
       fileId: file.id,
       name: file.name,
       size: file.size,
-      webSocket: webSocket,
+      senderWebSocket: webSocket,
+      notifyHost: notifyHost,
     );
   }
   @override
-  bool ownerExecute(OwnedRoom room) {
+  ownerExecute(OwnedRoom room) {
     // check if this user can send this file
     final canSend =
-        room.participants.any((user) => user.webSocket == webSocket);
-    if (!canSend) return false;
-    final added = room.addFile(
+        room.participants.any((user) => user.webSocket == senderWebSocket);
+
+    if (canSend || senderWebSocket == null) {
+      //if this request is from any user or the host himself
+      joinedExecute(room);
+    }
+    room.notifyAll(this);
+  }
+
+  @override
+  joinedExecute(JoinedRoom room) {
+    room.addFile(
         DownloadableFile(id: fileId, name: name, url: fileUrl, size: size));
-    return added;
   }
 
   factory ShareFileMessage.fromMap(
-      Map<String, dynamic> map, WebSocketChannel webSocket) {
+      Map<String, dynamic> map, WebSocketChannel? webSocket) {
     final roomId = map['roomId'] as String?;
     final room = ICommand.sAppModel.accessibleRoomWithId(roomId ?? '');
     if (room == null) {
@@ -183,7 +199,7 @@ class ShareFileMessage extends ActionMessage {
       room: room,
       fileUrl: map['fileUrl'] ?? '',
       size: map['size']?.toInt() ?? 0,
-      webSocket: webSocket,
+      senderWebSocket: webSocket,
       fileId: map['fileId'],
       name: map['name'],
     );
@@ -205,7 +221,8 @@ class ShareFileMessage extends ActionMessage {
 }
 
 class ActionMessageFactory {
-  ActionMessage? fromMap(Map<String, Object?> map, WebSocketChannel webSocket) {
+  ActionMessage? fromMap(
+      Map<String, Object?> map, WebSocketChannel? webSocket) {
     switch (map['type']) {
       case 'send-file':
         return ShareFileMessage.fromMap(map, webSocket);
@@ -216,7 +233,8 @@ class ActionMessageFactory {
 }
 
 class MessageFactory {
-  SocketMessage? fromMap(Map<String, Object?> map, WebSocketChannel webSocket) {
+  SocketMessage? fromMap(
+      Map<String, Object?> map, WebSocketChannel? webSocket) {
     final message = map['message'] as Map<String, Object?>;
     switch (map['type']) {
       case 'init':
@@ -229,10 +247,11 @@ class MessageFactory {
   }
 }
 
-class SocketServer {
+class SocketService {
   late final shelf.Handler handler;
 
-  void _handleMessage(Map<String, Object?> map, WebSocketChannel ws) {
+  void handleMessage(String message, [WebSocketChannel? ws]) {
+    final map = jsonDecode(message);
     try {
       final message = MessageFactory().fromMap(map, ws);
       message?.execute();
@@ -241,11 +260,15 @@ class SocketServer {
     }
   }
 
-  SocketServer() {
+  SocketService() {
     handler = webSocketHandler((WebSocketChannel ws) {
       ws.stream.listen((message) {
-        print('You have got a message $message');
-        _handleMessage(jsonDecode(message), ws);
+        try {
+          print('You have got a message $message');
+          handleMessage(message, ws);
+        } catch (e) {
+          print(e.toString());
+        }
       });
     });
   }

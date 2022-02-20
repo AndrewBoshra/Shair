@@ -16,11 +16,6 @@ import 'package:shair/data/room.dart';
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-abstract class Server {
-  Future start();
-  Future stop();
-}
-
 class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
@@ -59,7 +54,7 @@ class ProtectedRoutes {
       if (room.isInRoom(userCode)) {
         return innerHandler(request);
       } else {
-        debugPrint('request code is not in room');
+        debugPrint('request code is not in room or user already existsz');
         return AppResponse.forbidden({});
       }
     };
@@ -103,28 +98,32 @@ class ProtectedRoutes {
 
   shelf.Handler get router =>
       const shelf.Pipeline().addMiddleware(_auth).addHandler(_router);
+  late final SocketService socketService;
 
   ProtectedRoutes(this._appModel) {
     _router = shelf_router.Router();
-
     final validRoomPipe = const shelf.Pipeline().addMiddleware(_validateRoom);
     final joinedRoomPipe = validRoomPipe.addMiddleware(_joinedRoom);
     _router.post(
       '/<id>/join',
       validRoomPipe.addHandler(_joinRoom),
     );
+    socketService = SocketService();
     _router.all(
       '/<id>/channel',
-      joinedRoomPipe.addHandler(SocketServer().handler),
+      joinedRoomPipe.addHandler(socketService.handler),
     );
   }
 }
 
-class RestServer extends Server {
+class RestServer {
   final AppModel _appModel;
   Set<JoinedRoom> get _rooms => _appModel.myRooms;
   late shelf_router.Router router;
   HttpServer? _server;
+  late final ProtectedRoutes _protectedRoutes;
+
+  SocketService get socketService => _protectedRoutes.socketService;
 
   AppResponse _getRooms(shelf.Request req) {
     return AppResponse.ok(
@@ -139,9 +138,10 @@ class RestServer extends Server {
 
   RestServer(this._appModel) {
     router = shelf_router.Router();
+    _protectedRoutes = ProtectedRoutes(_appModel);
     router
       ..get('/', _getRooms)
-      ..mount('/room', ProtectedRoutes(_appModel).router);
+      ..mount('/room', _protectedRoutes.router);
   }
 
   @override

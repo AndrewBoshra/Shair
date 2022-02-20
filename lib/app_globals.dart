@@ -5,7 +5,7 @@ import 'package:shair/services/server.dart';
 
 abstract class AppGlobals {
   static final AppModel appModel = AppModel();
-  static final Server server = RestServer(appModel);
-  static final Client client = RestClient();
+  static final server = RestServer(appModel);
+  static final client = RestClient();
   static final WifiNetworkDevices wifiDevices = WifiNetworkDevices();
 }

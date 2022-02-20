@@ -31,9 +31,14 @@ class JoinRoomCommand extends ICommand {
             context, 'Your Request to join ${room.name} was rejected'),
       );
     } else {
-      joinRes.webSocket = await client.join(joinRes);
-      if (joinRes.webSocket == null) return;
-      InitSocketMessage.formConfig(config, joinRes).execute();
+      final ws = await client.join(joinRes);
+      if (ws == null) return;
+      joinRes.webSocket = ws;
+      ws.listen((event) {
+        print('YOu have got a message from the host $event');
+        server.socketService.handleMessage(event);
+      });
+      InitSocketMessage.formConfig(config, joinRes, true).execute();
       appModel.addRoomToJoinedRooms(joinRes);
       RootNavigator.toRoomScreen(joinRes, pop: true);
     }

@@ -62,7 +62,10 @@ class RoomScreen extends StatelessWidget {
   void _upload(BuildContext context, JoinedRoom room) async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
-      ShareFilesCommand(room, result.files).execute();
+      ShareFilesCommand(
+        room,
+        result.files,
+      ).execute();
     }
   }
 

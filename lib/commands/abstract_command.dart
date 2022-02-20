@@ -8,13 +8,13 @@ abstract class ICommand {
   execute();
 
   static AppModel get sAppModel => AppGlobals.appModel;
-  static Server get sServer => AppGlobals.server;
-  static Client get sClient => AppGlobals.client;
+  static RestServer get sServer => AppGlobals.server;
+  static RestClient get sClient => AppGlobals.client;
   static WifiNetworkDevices get sWifiDevices => AppGlobals.wifiDevices;
 
   AppModel get appModel => AppGlobals.appModel;
-  Server get server => AppGlobals.server;
-  Client get client => AppGlobals.client;
+  RestServer get server => AppGlobals.server;
+  RestClient get client => AppGlobals.client;
   WifiNetworkDevices get wifiDevices => AppGlobals.wifiDevices;
 }
 

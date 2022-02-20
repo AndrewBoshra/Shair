@@ -16,7 +16,8 @@ class ShareFilesCommand extends ICommand {
         baseUrl: roomUrl, name: f.name, size: f.size));
 
     for (final file in dFiles) {
-      ShareFileMessage.fromDownloadableFile(file, room).execute();
+      ShareFileMessage.fromDownloadableFile(file, room, notifyHost: true)
+          .execute();
     }
   }
 }
