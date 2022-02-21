@@ -7,6 +7,8 @@ import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path/path.dart' as path;
 
 class RestClient {
   final Api _api = Api();
@@ -59,6 +61,18 @@ class RestClient {
     }
   }
 
+  Future<File?> downloadFileFormRoom(
+      DownloadableFile downloadableFile, JoinedRoom room) async {
+    final res = await _api.getFile(downloadableFile.url, code: room.idInRoom);
+    final dataPath = await path_provider.getApplicationDocumentsDirectory();
+    final filePath = path.join(dataPath.path, 'Shair', downloadableFile.name);
+    if (res.hasError) return null;
+
+    final savedFile = File(filePath);
+    final openedFile = await savedFile.create();
+    await openedFile.writeAsBytes(res.response!.bodyBytes);
+    return openedFile;
+  }
   // Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
   //   //owned by this device
   //   if (room.owner == null) return room;
@@ -113,6 +127,31 @@ class Api {
         },
       ),
     );
+  }
+
+  Future<ApiResponse> getFile(
+    String url, {
+    Map<String, String>? headers,
+    String? code,
+  }) async {
+    try {
+      final res = await http.get(
+        Uri.parse(url),
+        headers: {
+          if (headers != null) ...headers,
+          if (code != null) 'code': code,
+        },
+      );
+      if (res.statusCode >= 400) {
+        throw Exception('couldn\'t download file');
+      }
+
+      return ApiResponse(parsedResponse: {}, response: res);
+    } catch (e) {
+      return ApiResponse(
+        error: e,
+      );
+    }
   }
 
   Future<ApiResponse> post(String url,

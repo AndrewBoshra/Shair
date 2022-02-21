@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/app_globals.dart';
 import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
@@ -76,8 +77,9 @@ class RoomScreen extends StatelessWidget {
           .map((e) => ListTile(
                 title: Text(e.url),
                 onTap: () async {
-                  await launch(e.url + '?code=${room.idInRoom}');
-                  print('launched');
+                  final file =
+                      await AppGlobals.client.downloadFileFormRoom(e, room);
+                  print('downloaded ${file?.path}');
                 },
               ))
           .toList(),
