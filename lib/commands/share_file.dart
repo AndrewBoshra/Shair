@@ -10,10 +10,15 @@ class ShareFilesCommand extends ICommand {
   @override
   execute() async {
     final device = await wifiDevices.currentDevice;
-    final roomUrl = device.url + '/room/${room.id}/';
+    final roomUrl = device.url + '/room/${room.id}/files/';
 
     final dFiles = files.map((f) => DownloadableFile.fromBaseUrl(
-        baseUrl: roomUrl, name: f.name, size: f.size));
+          path: f.path,
+          baseUrl: roomUrl,
+          name: f.name,
+          size: f.size,
+          owner: room.currentUser,
+        ));
 
     for (final file in dFiles) {
       ShareFileMessage.fromDownloadableFile(file, room, notifyHost: true)

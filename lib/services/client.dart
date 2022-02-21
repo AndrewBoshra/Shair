@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shair/data/config.dart';
@@ -12,7 +11,6 @@ import 'package:shair/services/network_devices.dart';
 class RestClient {
   final Api _api = Api();
 
-  @override
   Future<List<Room>?> getRooms(Device device) async {
     final res = await _api.get(device.url);
     if (res.hasError) return [];
@@ -29,7 +27,6 @@ class RestClient {
     return rooms;
   }
 
-  @override
   Future<JoinedRoom?> askToJoin(
     Room room,
     Config config,
@@ -40,12 +37,12 @@ class RestClient {
         code: code, personDetails: config.personDetails, body: {'ip': ip});
 
     if (res.hasError) return null;
-
-    return JoinedRoom.fromMap(res.parsedResponse!,
-        idInRoom: res.parsedResponse!['code'] as String?, owner: room.owner);
+    final currentUser = RoomUser.formConfig(config,
+        code: res.parsedResponse!['code'] as String?);
+    return JoinedRoom.fromMap(res.parsedResponse!, currentUser,
+        owner: room.owner);
   }
 
-  @override
   Future<WebSocket?> join(JoinedRoom room) async {
     if (room.owner == null) {
       return room.webSocket;
@@ -62,20 +59,19 @@ class RestClient {
     }
   }
 
-  @override
-  Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
-    //owned by this device
-    if (room.owner == null) return room;
+  // Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
+  //   //owned by this device
+  //   if (room.owner == null) return room;
 
-    final res = await _api.get(
-      '${room.owner!.url}/room/${room.id}',
-      code: room.idInRoom,
-    );
-    if (res.hasError || res.response!.statusCode != 200) {
-      throw Exception('couldn\'t access room $room');
-    }
-    return JoinedRoom.fromMap(res.parsedResponse!);
-  }
+  //   final res = await _api.get(
+  //     '${room.owner!.url}/room/${room.id}',
+  //     code: room.idInRoom,
+  //   );
+  //   if (res.hasError || res.response!.statusCode != 200) {
+  //     throw Exception('couldn\'t access room $room');
+  //   }
+  //   return JoinedRoom.fromMap(res.parsedResponse!);
+  // }
 }
 
 class ApiResponse {

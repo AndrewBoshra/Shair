@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:shair/data/config.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
@@ -21,6 +22,29 @@ class RoomUser {
 
   @override
   int get hashCode => code.hashCode;
+
+  Map<String, dynamic> toMap([bool includeCode = false]) {
+    return {
+      if (includeCode) 'code': code,
+      'image': image,
+      'name': name,
+    };
+  }
+
+  factory RoomUser.fromMap(Map<String, dynamic> map) {
+    return RoomUser(
+      code: map['code'],
+      image: map['image'],
+      name: map['name'],
+    );
+  }
+  factory RoomUser.formConfig(Config config, {String? code}) {
+    return RoomUser(
+      code: code,
+      image: config.character,
+      name: config.name,
+    );
+  }
 }
 
 class DownloadableFile {
@@ -28,23 +52,31 @@ class DownloadableFile {
   String name;
   int? size;
   late String id;
-
   String? path;
-
+  RoomUser? owner;
   DownloadableFile({
     required this.id,
     required this.name,
     required this.url,
+    required this.owner,
     this.size,
     this.path,
   });
 
   DownloadableFile.newFile(
-      {required this.url, required this.name, this.size, this.path})
+      {required this.url,
+      required this.name,
+      this.size,
+      required this.path,
+      required this.owner})
       : id = Generator.uid;
 
   DownloadableFile.fromBaseUrl(
-      {required String baseUrl, required this.name, int? size}) {
+      {required String baseUrl,
+      required this.name,
+      this.path,
+      int? size,
+      required this.owner}) {
     id = Generator.uid;
     url = baseUrl + id;
   }
@@ -64,6 +96,7 @@ class DownloadableFile {
       'size': size,
       'id': id,
       'name': name,
+      'owner': owner?.toMap(),
     };
   }
 
@@ -73,6 +106,7 @@ class DownloadableFile {
       size: map['size']?.toInt(),
       id: map['id'],
       name: map['name'],
+      owner: map['owner'] != null ? RoomUser.fromMap(map['owner']) : null,
     );
   }
 }
@@ -98,7 +132,7 @@ class Room {
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
-  Map<String, Object?> toMap() {
+  Map<String, Object?> toMap([bool includeFiles = false]) {
     return {
       'id': id,
       'name': name,
@@ -109,11 +143,12 @@ class Room {
 
   factory Room.fromMap(Map<String, dynamic> map, {Device? owner}) {
     return Room(
-        id: map['id'] ?? '',
-        name: map['name'] ?? '',
-        isLocked: map['isLocked'] == 'true',
-        image: map['image'],
-        owner: owner);
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      isLocked: map['isLocked'] == 'true',
+      image: map['image'],
+      owner: owner,
+    );
   }
 
   @override
@@ -136,6 +171,7 @@ class JoinedRoom extends Room {
   JoinedRoom({
     required String name,
     required bool isLocked,
+    required this.currentUser,
     Device? owner,
     String? id,
     String? image,
@@ -144,21 +180,24 @@ class JoinedRoom extends Room {
             id: id, image: image, name: name, isLocked: isLocked, owner: owner);
 
   /// Current Device id in this room.
-  String? idInRoom;
   Set<DownloadableFile> _files = {};
   WebSocket? webSocket;
+  RoomUser currentUser;
+  String? get idInRoom => currentUser.code;
 
-  factory JoinedRoom.fromMap(Map<String, dynamic> map,
-      {String? idInRoom, Device? owner}) {
+  factory JoinedRoom.fromMap(Map<String, dynamic> map, RoomUser currentUser,
+      {Device? owner}) {
     final _room = Room.fromMap(map);
+
     final room = JoinedRoom(
       name: _room.name,
       isLocked: _room.isLocked,
       id: _room.id,
       image: _room.image,
       owner: owner ?? _room.owner,
+      currentUser: currentUser,
     );
-    room.idInRoom = idInRoom;
+
     final filesRaw = (map['files'] ?? []) as List;
     room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
     return room;
@@ -168,6 +207,17 @@ class JoinedRoom extends Room {
 
   UnmodifiableSetView<RoomUser> get participants =>
       UnmodifiableSetView<RoomUser>(_participants);
+
+  RoomUser? userWithCode(String code) {
+    if (!isInRoom(code)) return null;
+    return _participants.firstWhere((u) => u.code == code);
+  }
+
+  Iterable<DownloadableFile> userFiles(RoomUser user) {
+    return files.where((f) => f.owner == user);
+  }
+
+  Iterable<DownloadableFile> get myFiles => userFiles(currentUser);
 
   bool isInRoom(String code) {
     return _participants.any((u) => u.code == code);
@@ -207,6 +257,7 @@ class OwnedRoom extends JoinedRoom {
   OwnedRoom({
     required String name,
     required bool isLocked,
+    required RoomUser currentUser,
     Device? owner,
     String? id,
     String? image,
@@ -216,6 +267,7 @@ class OwnedRoom extends JoinedRoom {
           id: id,
           image: image,
           owner: owner,
+          currentUser: currentUser,
         );
 
   @override

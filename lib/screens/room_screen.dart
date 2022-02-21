@@ -11,6 +11,7 @@ import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RoomScreen extends StatelessWidget {
   final String id;
@@ -74,6 +75,10 @@ class RoomScreen extends StatelessWidget {
       children: room.files
           .map((e) => ListTile(
                 title: Text(e.url),
+                onTap: () async {
+                  await launch(e.url + '?code=${room.idInRoom}');
+                  print('launched');
+                },
               ))
           .toList(),
     );

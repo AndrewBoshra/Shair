@@ -24,23 +24,22 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  @override
-  void initState() {
-    context.read<Config>().load().then((value) {
-      final config = value as Config;
-      RootNavigator.popAll();
-      if (config.isFirstTime) {
-        RootNavigator.toStartScreen();
-      } else {
-        RootNavigator.toHomeScreen();
-      }
-    });
-    super.initState();
-  }
+  // @override
+  // void initState() {
+  //   final config = context.read<Config>();
+  //   RootNavigator.popAll();
+  //   if (config.isFirstTime) {
+  //     RootNavigator.toStartScreen();
+  //   } else {
+  //     RootNavigator.toHomeScreen();
+  //   }
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
     final appTheme = AppTheme.of(context);
+    Config config = Provider.of(context);
 
     return MaterialApp(
       scrollBehavior: MyCustomScrollBehavior(),
@@ -53,7 +52,9 @@ class _AppState extends State<App> {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: RootNavigator.loadingScreen,
+      initialRoute: config.isFirstTime
+          ? RootNavigator.startScreen
+          : RootNavigator.homeScreen,
       onGenerateRoute: RootNavigator.onGenerateRoute,
     );
   }

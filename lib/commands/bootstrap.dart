@@ -13,7 +13,7 @@ class BootStrapCommand extends ICommand {
       await DesktopWindow.setMaxWindowSize(const Size(600, 1000000));
     }
     AppGlobals.server.start();
-
+    await AppGlobals.config.load();
     appModel.actionsStream.listen((action) {
       action.execute();
     });

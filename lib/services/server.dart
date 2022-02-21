@@ -10,11 +10,11 @@ import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
+import 'package:mime/mime.dart';
+
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
 
 import 'package:shair/data/room.dart';
-import 'package:shelf_web_socket/shelf_web_socket.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ProtectedRoutes {
   final AppModel _appModel;
@@ -54,7 +54,7 @@ class ProtectedRoutes {
       if (room.isInRoom(userCode)) {
         return innerHandler(request);
       } else {
-        debugPrint('request code is not in room or user already existsz');
+        debugPrint('request code is not in room');
         return AppResponse.forbidden({});
       }
     };
@@ -86,6 +86,27 @@ class ProtectedRoutes {
     return AppResponse.ok({...room.toMap(), 'code': joinResponse.code});
   }
 
+  Future<shelf.Response> _getFile(shelf.Request req) async {
+    final fileId = req.params['file-id']!;
+    final roomId = req.params['id']!;
+    final room = _getRoomWithId(roomId)!;
+
+    final myFiles = room.myFiles;
+    final files = myFiles.where((file) => file.id == fileId);
+    if (files.isEmpty) return AppResponse.notFound({});
+
+    final downloadableFile = files.first;
+    final file = File(downloadableFile.path ?? '');
+    final mime = lookupMimeType(file.path);
+    if (mime == null || !await file.exists()) {
+      return AppResponse.notFound({});
+    }
+    return shelf.Response.ok(file.openRead(), headers: {
+      'Content-Type': mime,
+      'Content-Disposition': 'attachment filename=${downloadableFile.name}'
+    });
+  }
+
   //////////////////////////
   //       Helpers        //
   //////////////////////////
@@ -113,6 +134,7 @@ class ProtectedRoutes {
       '/<id>/channel',
       joinedRoomPipe.addHandler(socketService.handler),
     );
+    _router.get('/<id>/files/<file-id>', joinedRoomPipe.addHandler(_getFile));
   }
 }
 
@@ -144,7 +166,6 @@ class RestServer {
       ..mount('/room', _protectedRoutes.router);
   }
 
-  @override
   Future<void> start() async {
     if (_server != null) return;
     _server = await io.serve(
@@ -155,7 +176,6 @@ class RestServer {
     return;
   }
 
-  @override
   Future<void> stop() async {
     await _server?.close();
     _server = null;

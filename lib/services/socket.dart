@@ -146,6 +146,8 @@ class ShareFileMessage extends ActionMessage {
   final String fileId;
   final int? size;
   final String name;
+  final String? path;
+  final String? fileOwnerCode;
 
   ShareFileMessage({
     required JoinedRoom room,
@@ -153,9 +155,12 @@ class ShareFileMessage extends ActionMessage {
     required this.fileUrl,
     required this.fileId,
     required this.size,
+    required this.fileOwnerCode,
     required WebSocketChannel? senderWebSocket,
+    this.path,
     bool notifyHost = false,
   }) : super(room, senderWebSocket, notifyHost);
+
   factory ShareFileMessage.fromDownloadableFile(
       DownloadableFile file, JoinedRoom room,
       {WebSocketChannel? webSocket, bool notifyHost = false}) {
@@ -165,8 +170,10 @@ class ShareFileMessage extends ActionMessage {
       fileId: file.id,
       name: file.name,
       size: file.size,
+      path: file.path,
       senderWebSocket: webSocket,
       notifyHost: notifyHost,
+      fileOwnerCode: file.owner?.code,
     );
   }
   @override
@@ -184,8 +191,21 @@ class ShareFileMessage extends ActionMessage {
 
   @override
   joinedExecute(JoinedRoom room) {
-    room.addFile(
-        DownloadableFile(id: fileId, name: name, url: fileUrl, size: size));
+    if (senderWebSocket != null && fileOwnerCode == null) {
+      debugPrint('file sender is not in this room');
+      return;
+    }
+    final user = fileOwnerCode != null
+        ? room.userWithCode(fileOwnerCode!)
+        : room.currentUser;
+    room.addFile(DownloadableFile(
+      id: fileId,
+      name: name,
+      url: fileUrl,
+      size: size,
+      owner: user,
+      path: path,
+    ));
   }
 
   factory ShareFileMessage.fromMap(
@@ -202,6 +222,7 @@ class ShareFileMessage extends ActionMessage {
       senderWebSocket: webSocket,
       fileId: map['fileId'],
       name: map['name'],
+      fileOwnerCode: map['fileOwnerCode'],
     );
   }
 
@@ -216,6 +237,7 @@ class ShareFileMessage extends ActionMessage {
       'size': size,
       'fileId': fileId,
       'name': name,
+      'fileOwnerCode': fileOwnerCode,
     };
   }
 }

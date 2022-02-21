@@ -35,6 +35,7 @@ dependencies:
     sdk: flutter
   google_fonts: ^2.3.1
   lottie: ^1.2.1
+  mime: ^1.0.1
   network_info_plus: ^2.1.2
   network_tools: ^1.0.8
   path_provider: ^2.0.8
@@ -42,6 +43,7 @@ dependencies:
   shelf: ^1.2.0
   shelf_router: ^1.1.2
   shelf_web_socket: ^1.0.1
+  url_launcher: ^6.0.20
   uuid: ^3.0.5
   web_socket_channel: ^2.1.0
 

@@ -11,13 +11,7 @@ import 'package:shair/data/room.dart';
 ///
 class AppModel extends ChangeNotifier {
   Set<Room> _availableRooms = {};
-  final Set<OwnedRoom> _myRooms = {
-    OwnedRoom(
-      isLocked: true,
-      name: 'Test',
-      id: '1',
-    )..add('1')
-  };
+  final Set<OwnedRoom> _myRooms = {};
   final Set<JoinedRoom> _joinedRooms = {};
 
   //*****************************************/
