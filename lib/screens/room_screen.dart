@@ -75,12 +75,7 @@ class RoomScreen extends StatelessWidget {
     return ListView(
       children: room.files
           .map((e) => ListTile(
-                title: Text(e.url),
-                onTap: () async {
-                  final file =
-                      await AppGlobals.client.downloadFileFormRoom(e, room);
-                  print('downloaded ${file?.path}');
-                },
+                title: SelectableText(e.url),
               ))
           .toList(),
     );

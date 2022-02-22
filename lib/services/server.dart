@@ -16,6 +16,37 @@ import 'package:shelf_router/shelf_router.dart' as shelf_router;
 
 import 'package:shair/data/room.dart';
 
+class DownloadRange {
+  final int start;
+  final int end;
+  DownloadRange._(this.start, this.end);
+
+  int get size => end - start + 1;
+  factory DownloadRange.fromHeaders(
+      Map<String, String?> headers, FileStat stat) {
+    final size = stat.size;
+    final rawRange = headers["range"];
+    if (rawRange == null) return DownloadRange._(0, size);
+
+    final positions = rawRange
+        .replaceAll("bytes=", "")
+        .split("-")
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (positions.isEmpty) return DownloadRange._(0, size);
+
+    final startStr = positions.first;
+    final start = int.parse(startStr);
+
+    var end = size;
+    if (positions.length > 1) {
+      end = int.parse(positions[1]);
+    }
+
+    return DownloadRange._(start, end);
+  }
+}
+
 class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
@@ -25,10 +56,10 @@ class ProtectedRoutes {
   // MiddleWares
   shelf.Handler _auth(innerHandler) {
     return (request) {
-      final userId = request.headers['code'];
-      if (userId == null) {
-        return AppResponse.forbidden({'message': 'user code is required'});
-      }
+      // final userId = request.headers['code'];
+      // if (userId == null) {
+      //   return AppResponse.forbidden({'message': 'user code is required'});
+      // }
       return innerHandler(request);
     };
   }
@@ -101,10 +132,19 @@ class ProtectedRoutes {
     if (mime == null || !await file.exists()) {
       return AppResponse.notFound({});
     }
-    return shelf.Response.ok(file.openRead(), headers: {
-      'Content-Type': mime,
-      'Content-Disposition': 'attachment filename=${downloadableFile.name}'
-    });
+    final stat = await file.stat();
+    final range = DownloadRange.fromHeaders(req.headers, stat);
+
+    return shelf.Response(206,
+        body: file.openRead(range.start, range.end),
+        headers: {
+          'content-type': mime,
+          'content-disposition':
+              'attachment; filename=${downloadableFile.name}',
+          'content-length': range.size.toString(),
+          'content-range': 'bytes ${range.start} - ${range.end} / ${stat.size}',
+          "accept-ranges": "bytes",
+        });
   }
 
   //////////////////////////
@@ -170,9 +210,6 @@ class RestServer {
     if (_server != null) return;
     _server = await io.serve(
         shelf.logRequests().addHandler(router), '0.0.0.0', kPort);
-    //TODO change this port to kPort this is only for dev
-    // _server =
-    // await io.serve(shelf.logRequests().addHandler(router), '0.0.0.0', 3000);
     return;
   }
 
