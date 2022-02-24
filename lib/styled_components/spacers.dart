@@ -10,6 +10,7 @@ const _largeHzSpacer = 40.0;
 
 abstract class Spacers {
   static const kPadding = 20.0;
+  static const kPaddingSmall = 8.0;
 
   static Widget smallSpacerHz() {
     return const SizedBox(

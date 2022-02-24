@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/commands/create_room.dart';
-import 'package:shair/core/validators.dart';
+import 'package:shair/utils/validators.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/config.dart';

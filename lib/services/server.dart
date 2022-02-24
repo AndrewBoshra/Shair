@@ -123,11 +123,11 @@ class ProtectedRoutes {
     final room = _getRoomWithId(roomId)!;
 
     final myFiles = room.myFiles;
-    final files = myFiles.where((file) => file.id == fileId);
+    final files = myFiles.where((sharedFile) => sharedFile.file.id == fileId);
     if (files.isEmpty) return AppResponse.notFound({});
 
-    final downloadableFile = files.first;
-    final file = File(downloadableFile.path ?? '');
+    final sharedFile = files.first;
+    final file = File(sharedFile.file.path ?? '');
     final mime = lookupMimeType(file.path);
     if (mime == null || !await file.exists()) {
       return AppResponse.notFound({});
@@ -139,8 +139,7 @@ class ProtectedRoutes {
         body: file.openRead(range.start, range.end),
         headers: {
           'content-type': mime,
-          'content-disposition':
-              'attachment; filename=${downloadableFile.name}',
+          'content-disposition': 'attachment; filename=${sharedFile.file.name}',
           'content-length': range.size.toString(),
           'content-range': 'bytes ${range.start} - ${range.end} / ${stat.size}',
           "accept-ranges": "bytes",

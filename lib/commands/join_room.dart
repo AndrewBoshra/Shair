@@ -40,6 +40,7 @@ class JoinRoomCommand extends ICommand {
       });
       InitSocketMessage.formConfig(config, joinRes, true).execute();
       appModel.addRoomToJoinedRooms(joinRes);
+      appModel.cancelRoomPolling();
       RootNavigator.toRoomScreen(joinRes, pop: true);
     }
   }

@@ -198,14 +198,18 @@ class ShareFileMessage extends ActionMessage {
     final user = fileOwnerCode != null
         ? room.userWithCode(fileOwnerCode!)
         : room.currentUser;
-    room.addFile(DownloadableFile(
-      id: fileId,
-      name: name,
-      url: fileUrl,
-      size: size,
-      owner: user,
-      path: path,
-    ));
+    room.addFile(
+      SharedFile(
+        file: DownloadableFile(
+          id: fileId,
+          name: name,
+          url: fileUrl,
+          size: size,
+          owner: user,
+          path: path,
+        ),
+      ),
+    );
   }
 
   factory ShareFileMessage.fromMap(

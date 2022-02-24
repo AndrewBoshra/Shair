@@ -128,6 +128,26 @@ class AppTheme extends ChangeNotifier {
     notifyListeners();
   }
 
+  Color _successColor;
+
+  Color get successColor => _successColor;
+
+  set successColor(Color successColor) {
+    _successColor = successColor;
+
+    notifyListeners();
+  }
+
+  Color _successVarColor;
+
+  Color get successVarColor => _successVarColor;
+
+  set successVarColor(Color successVarColor) {
+    _successVarColor = successVarColor;
+
+    notifyListeners();
+  }
+
   Color _onErrorColor;
 
   Color get onErrorColor => _onErrorColor;
@@ -173,6 +193,8 @@ class AppTheme extends ChangeNotifier {
     required Color cardColor,
     required Color errorColor,
     required Color onErrorColor,
+    required Color successColor,
+    required Color successVarColor,
     this.brightness,
   })  : _primaryColor = primaryColor,
         _primaryVarColor = primaryVarColor,
@@ -188,7 +210,9 @@ class AppTheme extends ChangeNotifier {
         _onBackgroundColor = onBackgroundColor,
         _cardColor = cardColor,
         _errorColor = errorColor,
-        _onErrorColor = onErrorColor;
+        _onErrorColor = onErrorColor,
+        _successVarColor = successVarColor,
+        _successColor = successColor;
 }
 
 extension Colorize on TextTheme {

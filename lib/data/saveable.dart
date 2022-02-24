@@ -27,7 +27,7 @@ class UniversalFile {
     return file.readAsString();
   }
 
-  Future<Map<String, Object?>> readAsJson() async {
+  Future<Map<String, Object?>> readAsMap() async {
     final fileStr = await read();
     if (fileStr.isEmpty) {
       return {};
@@ -53,13 +53,13 @@ abstract class Saveable {
   }
 
   Future<Saveable> load() async {
-    final json = await file.readAsJson();
-    readFromJson(json);
+    final json = await file.readAsMap();
+    readFromMap(json);
     return this;
   }
 
   Map<String, Object?> toMap();
-  Saveable readFromJson(Map<String, Object?> json);
+  Saveable readFromMap(Map<String, Object?> json);
 
   late UniversalFile file;
 

@@ -1,8 +1,8 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:shair/data/config.dart';
+import 'package:shair/services/downloader.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
@@ -111,6 +111,24 @@ class DownloadableFile {
   }
 }
 
+/// a file which is either being downloaded or can be downloaded
+class SharedFile {
+  final DownloadableFile file;
+  Downloader? downloader;
+  SharedFile({required this.file, this.downloader});
+  @override
+  bool operator ==(Object other) {
+    return other is SharedFile && other.file == file;
+  }
+
+  @override
+  int get hashCode => file.hashCode;
+
+  /// true if this file is being downloaded or paused.
+  /// false if the download never started before of stopped.
+  bool get isDownloading => downloader != null;
+}
+
 class Room {
   late String id;
   final String name;
@@ -180,7 +198,7 @@ class JoinedRoom extends Room {
             id: id, image: image, name: name, isLocked: isLocked, owner: owner);
 
   /// Current Device id in this room.
-  Set<DownloadableFile> _files = {};
+  Set<SharedFile> _files = {};
   WebSocket? webSocket;
   RoomUser currentUser;
   String? get idInRoom => currentUser.code;
@@ -199,7 +217,9 @@ class JoinedRoom extends Room {
     );
 
     final filesRaw = (map['files'] ?? []) as List;
-    room._files = filesRaw.map((fr) => DownloadableFile.fromMap(fr)).toSet();
+    room._files = filesRaw
+        .map((fr) => SharedFile(file: DownloadableFile.fromMap(fr)))
+        .toSet();
     return room;
   }
 
@@ -213,22 +233,24 @@ class JoinedRoom extends Room {
     return _participants.firstWhere((u) => u.code == code);
   }
 
-  Iterable<DownloadableFile> userFiles(RoomUser user) {
-    return files.where((f) => f.owner == user);
+  Iterable<SharedFile> userFiles(RoomUser user) {
+    return files.where((f) => f.file.owner == user);
   }
 
-  Iterable<DownloadableFile> get myFiles => userFiles(currentUser);
+  Iterable<SharedFile> get myFiles => userFiles(currentUser);
 
   bool isInRoom(String code) {
     return _participants.any((u) => u.code == code);
   }
+
+  bool isMine(SharedFile file) => myFiles.contains(file);
 
   ///add new user to this room with given code
   bool add(String code) {
     return _participants.add(RoomUser(code: code));
   }
 
-  void addFiles(Iterable<DownloadableFile> files) {
+  void addFiles(Iterable<SharedFile> files) {
     return _files.addAll(files);
   }
 
@@ -246,9 +268,9 @@ class JoinedRoom extends Room {
   //       Getters     //
   ///////////////////////
 
-  UnmodifiableSetView<DownloadableFile> get files =>
-      UnmodifiableSetView<DownloadableFile>(_files);
-  bool addFile(DownloadableFile file) {
+  UnmodifiableSetView<SharedFile> get files =>
+      UnmodifiableSetView<SharedFile>(_files);
+  bool addFile(SharedFile file) {
     return _files.add(file);
   }
 }

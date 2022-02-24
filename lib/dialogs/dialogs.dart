@@ -6,7 +6,7 @@ import 'package:shair/data/config.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
-import 'package:shair/core/extensions.dart';
+import 'package:shair/utils/extensions.dart';
 
 class JoinCodeDialog extends StatelessWidget {
   const JoinCodeDialog({Key? key, required this.code}) : super(key: key);

@@ -20,6 +20,9 @@ const _kColorCard = Colors.white;
 const _kColorError = Color(0xFFFF0075);
 const _kColorOnError = Colors.white;
 
+const _kColorSuccess = Color.fromARGB(255, 52, 208, 88);
+const _kColorSuccessVar = Color.fromARGB(255, 60, 245, 103);
+
 final AppTheme lightTheme = AppTheme(
   primaryColor: _kColorPrimary,
   primaryVarColor: _kColorPrimaryVar,
@@ -36,4 +39,6 @@ final AppTheme lightTheme = AppTheme(
   cardColor: _kColorCard,
   errorColor: _kColorError,
   onErrorColor: _kColorOnError,
+  successColor: _kColorSuccess,
+  successVarColor: _kColorSuccessVar,
 );

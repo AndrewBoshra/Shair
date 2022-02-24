@@ -1,18 +1,108 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:shair/app_globals.dart';
+
 import 'package:shair/commands/share_file.dart';
+import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/screens/error.dart';
-import 'package:shair/services/socket.dart';
+import 'package:shair/services/downloader.dart';
 import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+class SharedFileTile extends StatelessWidget {
+  const SharedFileTile({Key? key, required this.sharedFile, required this.room})
+      : super(key: key);
+  final SharedFile sharedFile;
+  final JoinedRoom room;
+
+  DownloadableFile get file => sharedFile.file;
+  Downloader? get downloader => sharedFile.downloader;
+
+  Widget _buildFileData(TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Flexible(
+          child: Text(
+            file.name,
+            style: textTheme.subtitle2,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (sharedFile.isDownloading)
+          Text(
+            '${downloader?.percentage}%',
+            style: textTheme.overline,
+          ),
+      ]),
+    );
+  }
+
+  Widget _buildProgressBar(AppTheme appTheme, int progress, Widget fileData) {
+    return LiquidLinearProgressIndicator(
+      value: progress / 100, // Defaults to 0.5.
+      valueColor: AlwaysStoppedAnimation(
+        Color.lerp(
+            appTheme.primaryVarColor, appTheme.successColor, progress / 100)!,
+      ),
+      backgroundColor: appTheme.secondaryVarColor,
+      borderWidth: -100,
+      borderColor: Colors.transparent,
+      direction: Axis.horizontal,
+      center: fileData,
+    );
+  }
+
+  Widget _buildOwnedFile(AppTheme appTheme, Widget fileData) {
+    return ColoredBox(color: appTheme.primaryVarColor, child: fileData);
+  }
+
+  Widget _buildFile(AppTheme appTheme, Widget fileData) {
+    return ColoredBox(color: appTheme.secondaryVarColor, child: fileData);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = AppTheme.of(context);
+    final textTheme =
+        Theme.of(context).textTheme.colorize(appTheme.onSecondaryColor);
+
+    late Widget child;
+    final fileData = _buildFileData(textTheme);
+
+    if (room.isMine(sharedFile)) {
+      child = _buildOwnedFile(appTheme, fileData);
+    } else if (!sharedFile.isDownloading) {
+      child = _buildFile(appTheme, fileData);
+    } else {
+      child = StreamBuilder<int>(
+        initialData: 0,
+        stream: downloader!.progressStream,
+        builder: (context, snapshot) {
+          return _buildProgressBar(appTheme, snapshot.data!, fileData);
+        },
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {},
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: SizedBox(
+          height: 50,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
 
 class RoomScreen extends StatelessWidget {
   final String id;
@@ -23,39 +113,40 @@ class RoomScreen extends StatelessWidget {
     AppModel appModel = Provider.of(context);
     final room = appModel.accessibleRoomWithId(id);
     if (room == null) return const ErrorScreen(error: 'Invalid Room');
-    return GradientBackground(
-      child: Scaffold(
-        appBar: StyledAppBar.transparent(
-          title: Row(
-            children: [
-              SizedBox(
-                height: kToolbarHeight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: RoomAvatar(imageUrl: room.image),
-                ),
+    final appTheme = AppTheme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            SizedBox(
+              height: kToolbarHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: RoomAvatar(imageUrl: room.image),
               ),
-              Spacers.mediumSpacerHz(),
-              Text(room.name)
-            ],
-          ),
+            ),
+            Spacers.mediumSpacerHz(),
+            Text(room.name)
+          ],
         ),
-        backgroundColor: Colors.transparent,
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _buildFiles(room)),
-              Spacers.mediumSpacerVr(),
-              StyledElevatedButton.onPrimary(
-                context,
-                onPressed: () => _upload(context, room),
-                text: 'Send Files',
-              ),
-              Spacers.mediumSpacerVr(),
-            ],
-          ),
+      ),
+      backgroundColor: appTheme.backgroundColor,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ListView(children: _buildFiles(room)),
+            ),
+            Spacers.mediumSpacerVr(),
+            StyledElevatedButton.primary(
+              context,
+              onPressed: () => _upload(context, room),
+              text: 'Share Files',
+            ),
+            Spacers.smallSpacerVr(),
+          ],
         ),
       ),
     );
@@ -71,13 +162,17 @@ class RoomScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildFiles(JoinedRoom room) {
-    return ListView(
-      children: room.files
-          .map((e) => ListTile(
-                title: SelectableText(e.url),
-              ))
-          .toList(),
-    );
+  List<Widget> _buildFiles(JoinedRoom room) {
+    return room.files
+        .map(
+          (f) => Padding(
+            padding: const EdgeInsets.only(bottom: Spacers.kPaddingSmall),
+            child: SharedFileTile(
+              sharedFile: f,
+              room: room,
+            ),
+          ),
+        )
+        .toList();
   }
 }

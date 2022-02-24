@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 
 import 'package:shair/data/saveable.dart';
@@ -50,14 +52,17 @@ class PersonDetails {
 class Config extends Saveable with ChangeNotifier {
   bool _isFirstTime;
   ThemeEnum? _theme;
+  String? _defaultDownloadPath;
   late PersonDetails personDetails;
   Config({
     bool isFirstTime = true,
+    String? defaultDownloadPath,
     String? character,
     String? name,
     ThemeEnum? theme,
   })  : _isFirstTime = isFirstTime,
         _theme = theme,
+        _defaultDownloadPath = defaultDownloadPath,
         super('config.conf') {
     personDetails = PersonDetails(name: name, character: character);
   }
@@ -65,23 +70,28 @@ class Config extends Saveable with ChangeNotifier {
   static const String _isFirstTimeStr = 'isFirstTime';
   static const String _themeStr = 'theme';
   static const String _personStr = 'person';
+  static const String _downloadPathStr = 'downloadPath';
 
   bool get isFirstTime => _isFirstTime;
+  String? get defaultDownloadPath => _defaultDownloadPath;
   String? get character => personDetails.character;
   String? get name => personDetails.name;
   ThemeEnum? get theme => _theme;
+
   @override
   Map<String, Object?> toMap() {
     return {
       _isFirstTimeStr: _isFirstTime,
       _personStr: personDetails.toMap(),
       _themeStr: themeToString(_theme),
+      _downloadPathStr: _defaultDownloadPath,
     };
   }
 
   @override
-  Config readFromJson(Map<String, Object?> map) {
+  Config readFromMap(Map<String, Object?> map) {
     _isFirstTime = (map[_isFirstTimeStr] as bool?) ?? true;
+    _defaultDownloadPath = map[_downloadPathStr] as String?;
     personDetails =
         PersonDetails.fromMap((map[_personStr] as Map<String, Object?>?) ?? {});
     _theme = themeFromString(map[_themeStr] as String?);
@@ -89,9 +99,21 @@ class Config extends Saveable with ChangeNotifier {
     return this;
   }
 
+  Directory? get downloadDir {
+    if (_defaultDownloadPath == null) return null;
+    return Directory(_defaultDownloadPath!);
+  }
+
   set isFirstTime(bool firstTime) {
     _isFirstTime = firstTime;
     notifyListeners();
+  }
+
+  Future<bool> setDefaultDownloadPath(String path) async {
+    if (!await Directory(path).exists()) return false;
+    _defaultDownloadPath = path;
+    notifyListeners();
+    return true;
   }
 
   set name(String? newName) {

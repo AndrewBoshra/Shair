@@ -34,6 +34,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^2.3.1
+  liquid_progress_indicator: ^0.4.0
   lottie: ^1.2.1
   mime: ^1.0.1
   network_info_plus: ^2.1.2

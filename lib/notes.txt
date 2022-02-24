@@ -5,3 +5,8 @@ when user joins a room he gets an access code:
     - the room host uses this data to add him to the room
     - ONLY THE HOST CAN BROADCAST MESSAGES TO ALL THE OTHER PARTICIPANTS
     
+
+side notes
+
+-room screen currently is for testing it should be re written
+-the room host must also have access code
