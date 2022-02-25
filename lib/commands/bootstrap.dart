@@ -1,18 +1,42 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shair/app_globals.dart';
 import 'package:shair/commands/abstract_command.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
+import 'package:shair/data/assets.dart';
 
 class BootStrapCommand extends ICommand {
+  Future _initImages() async {
+    final manifestContent = await rootBundle.loadString('AssetManifest.json');
+
+    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+
+    final imagePaths = manifestMap.keys
+        .where((String key) => key.contains('assets/characters'))
+        .toList();
+    final characterImagesDir = await ImageAssets.cachedCharactersDir;
+    for (final imagePath in imagePaths) {
+      final iPath =
+          path.join(characterImagesDir.path, path.basename(imagePath));
+      final imageFile = File(iPath);
+      if (await imageFile.exists()) continue;
+
+      final imgData = await rootBundle.load(imagePath);
+      await imageFile.create();
+
+      imageFile.writeAsBytes(imgData.buffer
+          .asUint8List(imgData.offsetInBytes, imgData.lengthInBytes));
+    }
+  }
+
   @override
   execute() async {
-    print('current ip ${await wifiDevices.currentDevice}');
-    // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
       Permission.manageExternalStorage,
       Permission.storage,
@@ -44,5 +68,7 @@ class BootStrapCommand extends ICommand {
     appModel.actionsStream.listen((action) {
       action.execute();
     });
+
+    _initImages();
   }
 }

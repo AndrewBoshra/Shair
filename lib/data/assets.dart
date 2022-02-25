@@ -1,4 +1,26 @@
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path/path.dart' as path;
+
 abstract class ImageAssets {
+  static Future<Directory> get cachedCharactersDir async {
+    final cacheDir = await path_provider.getTemporaryDirectory();
+    final characterImagesDir =
+        Directory(path.join(cacheDir.path, 'characters'));
+    await characterImagesDir.create(recursive: true);
+    return characterImagesDir;
+  }
+
+  static Future<List<String>> getCachedCharacterImages() async {
+    final dir = await cachedCharactersDir;
+    final imagePaths = <String>[];
+    await for (final image in dir.list()) {
+      imagePaths.add(image.path);
+    }
+    return imagePaths;
+  }
+
   static List<String> getAllCharacter() {
     final imageNames = [
       'm1.jpg',

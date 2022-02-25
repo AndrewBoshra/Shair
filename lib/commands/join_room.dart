@@ -7,6 +7,7 @@ import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/dialogs/snackbars.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/services/generator.dart';
+import 'package:shair/services/server.dart';
 import 'package:shair/services/socket.dart';
 
 class JoinRoomCommand extends ICommand {
@@ -39,7 +40,13 @@ class JoinRoomCommand extends ICommand {
       ws.listen((event) {
         server.socketService.handleMessage(event);
       });
-      InitSocketMessage.formConfig(config, joinRes, true).execute();
+      final currentDevice = await wifiDevices.currentDevice;
+      InitSocketMessage.formConfig(
+        config,
+        joinRes,
+        true,
+        currentDevice.url + RestServer.userImagePath,
+      ).execute();
       appModel.addRoomToJoinedRooms(joinRes);
       appModel.cancelRoomPolling();
       RootNavigator.toRoomScreen(joinRes, pop: true);

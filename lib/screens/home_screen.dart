@@ -102,7 +102,7 @@ class HomeScreen extends StatelessWidget {
     return ListTile(
       onTap: () => RootNavigator.toRoomScreen(room),
       leading: RoomAvatar(
-        imageUrl: room.image,
+        characterImage: room.roomImage,
       ),
       title: Text(
         room.name,
@@ -143,7 +143,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: CharacterAvatar(image: config.character!),
+                child: CharacterAvatar(characterImage: config.character!),
               ),
               SelectableText(
                 config.name!,

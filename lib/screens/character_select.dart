@@ -67,12 +67,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     };
   }
 
-  Widget _buildCharacters(BoxConstraints constraints) {
-    final assetImages = ImageAssets.getAllCharacter();
-
-    final characters =
-        assetImages.map((e) => CharacterAvatar(image: e)).toList();
-
+  Widget _buildCharacters() {
     const vpFraction = .5;
 
     final buttons = Row(
@@ -92,18 +87,29 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
         actions: _actions(),
         child: Column(
           children: [
-            CarouselSlider(
-              carouselController: _carouselController,
-              options: CarouselOptions(
-                onPageChanged: (index, reason) =>
-                    _selectedCharacter = assetImages[index],
-                height: 200,
-                enlargeCenterPage: true,
-                viewportFraction: vpFraction,
-                aspectRatio: 1,
-              ),
-              items: characters,
-            ),
+            FutureBuilder<List<String>>(
+                future: ImageAssets.getCachedCharacterImages(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  final characters = snapshot.data!
+                      .map((iPath) => CharacterAvatar(
+                          characterImage: CharacterImage(iPath, true)))
+                      .toList();
+                  return CarouselSlider(
+                    carouselController: _carouselController,
+                    options: CarouselOptions(
+                      onPageChanged: (index, reason) =>
+                          _selectedCharacter = snapshot.data![index],
+                      height: 200,
+                      enlargeCenterPage: true,
+                      viewportFraction: vpFraction,
+                      aspectRatio: 1,
+                    ),
+                    items: characters,
+                  );
+                }),
             buttons,
           ],
         ),
@@ -116,7 +122,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     if (isValid == null || !isValid) return;
     final config = context.read<Config>();
     config.name = _textController.value.text;
-    config.character = _selectedCharacter;
+    config.character = CharacterImage(_selectedCharacter, true);
     config.isFirstTime = false;
 
     config.save();
@@ -127,61 +133,58 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final colorScheme = Theme.of(context).colorScheme;
     final appTheme = AppTheme.of(context);
 
-    return LayoutBuilder(builder: (context, constraints) {
-      return GradientBackground(
-        colors: [appTheme.secondaryColor, appTheme.primaryColor],
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildCharacters(constraints),
-                    Spacers.mediumSpacerVr(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Spacers.kPadding,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            TextFormField(
-                              controller: _textController,
-                              textCapitalization: TextCapitalization.words,
-                              decoration: _kInputDecoration,
-                              validator:
-                                  const EmptyStringValidator('Name').validate,
+    return GradientBackground(
+      colors: [appTheme.secondaryColor, appTheme.primaryColor],
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildCharacters(),
+                  Spacers.mediumSpacerVr(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Spacers.kPadding,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          TextFormField(
+                            controller: _textController,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: _kInputDecoration,
+                            validator:
+                                const EmptyStringValidator('Name').validate,
+                          ),
+                          Spacers.mediumSpacerVr(),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: StyledElevatedButton.onPrimary(
+                              context,
+                              onPressed: _createUser,
+                              text: 'Let\'s Go',
                             ),
-                            Spacers.mediumSpacerVr(),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: StyledElevatedButton.onPrimary(
-                                context,
-                                onPressed: _createUser,
-                                text: 'Let\'s Go',
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 }

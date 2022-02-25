@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 
 import 'package:shair/data/saveable.dart';
+import 'package:shair/styled_components/avatar.dart';
 
 enum ThemeEnum { dark, light }
 String? themeToString(ThemeEnum? theme) {
@@ -29,21 +30,24 @@ ThemeEnum? themeFromString(String? theme) {
 class PersonDetails {
   static const String _characterStr = 'character';
   static const String _nameStr = 'name';
-  String? character;
+  CharacterImage? character;
   String? name;
 
   PersonDetails({this.name, this.character});
 
-  factory PersonDetails.fromMap(Map<String, Object?> map) {
+  factory PersonDetails.fromMap(Map<String, Object?> map,
+      {bool isImageLocal = false}) {
     return PersonDetails(
       name: map[_nameStr].toString(),
-      character: map[_characterStr].toString(),
+      character: map[_characterStr] != null
+          ? CharacterImage(map[_characterStr] as String, isImageLocal)
+          : null,
     );
   }
 
   Map<String, Object?> toMap() {
     return {
-      _characterStr: character,
+      _characterStr: character?.path,
       _nameStr: name,
     };
   }
@@ -57,7 +61,7 @@ class Config extends Saveable with ChangeNotifier {
   Config({
     bool isFirstTime = true,
     String? defaultDownloadPath,
-    String? character,
+    CharacterImage? character,
     String? name,
     ThemeEnum? theme,
   })  : _isFirstTime = isFirstTime,
@@ -74,7 +78,7 @@ class Config extends Saveable with ChangeNotifier {
 
   bool get isFirstTime => _isFirstTime;
   String? get defaultDownloadPath => _defaultDownloadPath;
-  String? get character => personDetails.character;
+  CharacterImage? get character => personDetails.character;
   String? get name => personDetails.name;
   ThemeEnum? get theme => _theme;
 
@@ -121,7 +125,7 @@ class Config extends Saveable with ChangeNotifier {
     notifyListeners();
   }
 
-  set character(String? newCharacter) {
+  set character(CharacterImage? newCharacter) {
     personDetails.character = newCharacter;
     notifyListeners();
   }

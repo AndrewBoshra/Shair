@@ -60,7 +60,7 @@ class InitSocketMessage extends SocketMessage {
   }) : super(room, senderWebSocket, notifyHost);
 
   factory InitSocketMessage.formConfig(
-      Config config, JoinedRoom room, bool notifyHost) {
+      Config config, JoinedRoom room, bool notifyHost, String userImageUrl) {
     assert(room.idInRoom != null,
         'You must  have inRoomId to be able to send to room host');
     assert(room.webSocket != null,
@@ -68,7 +68,7 @@ class InitSocketMessage extends SocketMessage {
 
     return InitSocketMessage(
       name: config.name,
-      imageUrl: config.character ?? '',
+      imageUrl: userImageUrl,
       code: room.idInRoom!,
       room: room,
       notifyHost: notifyHost,

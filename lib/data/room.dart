@@ -6,13 +6,14 @@ import 'package:shair/services/downloader.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
+import 'package:shair/styled_components/avatar.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomUser {
   RoomUser({this.name, this.image, this.code, this.webSocket});
   WebSocketChannel? webSocket;
   String? code;
-  String? image;
+  CharacterImage? image;
   String? name;
 
   @override
@@ -139,7 +140,7 @@ class Room {
   late String id;
   final String name;
   final bool isLocked;
-  final String? image;
+  final CharacterImage? roomImage;
 
   /// this is null in case this device is the owner of this room
   Device? owner;
@@ -148,7 +149,7 @@ class Room {
     String? id,
     required this.name,
     required this.isLocked,
-    this.image,
+    this.roomImage,
     this.owner,
   }) {
     this.id = id ?? Generator.uid;
@@ -161,16 +162,19 @@ class Room {
       'id': id,
       'name': name,
       'isLocked': isLocked,
-      'image': image,
+      'image': roomImage?.path
     };
   }
 
-  factory Room.fromMap(Map<String, dynamic> map, {Device? owner}) {
+  factory Room.fromMap(Map<String, dynamic> map,
+      {Device? owner, bool isImageLocal = false}) {
     return Room(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       isLocked: map['isLocked'] ?? true,
-      image: map['image'],
+      roomImage: map['image'] != null
+          ? CharacterImage(map['image'] as String, isImageLocal)
+          : null,
       owner: owner,
     );
   }
@@ -198,11 +202,11 @@ class JoinedRoom extends Room {
     required this.currentUser,
     Device? owner,
     String? id,
-    String? image,
+    CharacterImage? roomImage,
     this.webSocket,
   }) : super(
           id: id,
-          image: image,
+          roomImage: roomImage,
           name: name,
           isLocked: isLocked,
           owner: owner,
@@ -227,7 +231,7 @@ class JoinedRoom extends Room {
       name: _room.name,
       isLocked: _room.isLocked,
       id: _room.id,
-      image: _room.image,
+      roomImage: _room.roomImage,
       owner: owner ?? _room.owner,
       currentUser: currentUser,
     );
@@ -306,12 +310,12 @@ class OwnedRoom extends JoinedRoom {
     required RoomUser currentUser,
     Device? owner,
     String? id,
-    String? image,
+    CharacterImage? roomImage,
   }) : super(
           name: name,
           isLocked: isLocked,
           id: id,
-          image: image,
+          roomImage: roomImage,
           owner: owner,
           currentUser: currentUser,
         );
@@ -325,7 +329,9 @@ class OwnedRoom extends JoinedRoom {
       final participant = _participants.firstWhere((p) => p.code == code);
       if (participant.webSocket != null) return false;
       participant.webSocket = ws;
-      participant.image = image;
+      if (image != null) {
+        participant.image = CharacterImage(image, false);
+      }
       participant.name = name;
       return true;
     }

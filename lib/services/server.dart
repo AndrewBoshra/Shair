@@ -109,8 +109,9 @@ class ProtectedRoutes {
       room: room,
     );
     _appModel.actionsSink.add(joinRequest);
-    final joinResponse = await _appModel.responseStream
-        .firstWhere((res) => res.id == joinRequest.id);
+    final joinResponse = await _appModel.responseStream.firstWhere(
+      (res) => res.id == joinRequest.id,
+    );
     if (joinResponse is! JoinResponse || !joinResponse.isAccepted) {
       return AppResponse.forbidden({});
     }
@@ -188,9 +189,9 @@ class RestServer {
   late shelf_router.Router router;
   HttpServer? _server;
   late final ProtectedRoutes _protectedRoutes;
-
   SocketService get socketService => _protectedRoutes.socketService;
 
+  static String get userImagePath => '/user-image';
   AppResponse _getRooms(shelf.Request req) {
     return AppResponse.ok(
       {

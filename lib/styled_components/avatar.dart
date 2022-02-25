@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shair/data/assets.dart';
 
@@ -5,13 +7,22 @@ import 'package:shair/data/room.dart';
 
 const _shadowSize = 20.0;
 
+class CharacterImage {
+  final String path;
+  final bool isLocal;
+  CharacterImage(this.path, this.isLocal);
+  ImageProvider get image => isLocal
+      ? FileImage(File(path))
+      : NetworkImage(path) as ImageProvider<Object>;
+}
+
 class CharacterAvatar extends StatelessWidget {
-  final String image;
+  final CharacterImage characterImage;
   final Color borderColor;
   final double lineWidth;
   const CharacterAvatar({
     Key? key,
-    required this.image,
+    required this.characterImage,
     this.borderColor = Colors.white,
     this.lineWidth = 5,
   }) : super(key: key);
@@ -34,7 +45,8 @@ class CharacterAvatar extends StatelessWidget {
             offset: const Offset(0, 15),
           )
         ],
-        image: DecorationImage(image: AssetImage(image), fit: BoxFit.contain),
+        image:
+            DecorationImage(image: characterImage.image, fit: BoxFit.contain),
         shape: BoxShape.circle,
       ),
     );
@@ -44,23 +56,17 @@ class CharacterAvatar extends StatelessWidget {
 class RoomAvatar extends StatelessWidget {
   const RoomAvatar({
     Key? key,
-    required this.imageUrl,
+    required this.characterImage,
   }) : super(key: key);
-  final String? imageUrl;
+  final CharacterImage? characterImage;
+
   @override
   Widget build(BuildContext context) {
-    return Text('avatar');
-    // const placeHolder = AssetImage(ImageAssets.logo);
-    // ImageProvider image;
+    const placeHolder = AssetImage(ImageAssets.logo);
 
-    // if (imageUrl == null) {
-    //   image = placeHolder;
-    // } else {
-    //   image = NetworkImage(imageUrl!);
-    // }
-    // return CircleAvatar(
-    //   foregroundImage: image,
-    //   backgroundImage: placeHolder,
-    // );
+    return CircleAvatar(
+      foregroundImage: characterImage?.image ?? placeHolder,
+      backgroundImage: placeHolder,
+    );
   }
 }
