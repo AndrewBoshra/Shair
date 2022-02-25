@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:shair/utils/utils.dart';
 
 const kPort = 4560;
 
@@ -48,6 +49,12 @@ abstract class NetworkDevices {
 
 class WifiNetworkDevices implements NetworkDevices {
   final Set<Device> _devices = {};
+  Future<String> get _myIp async {
+    final ip = await (NetworkInfo().getWifiIP());
+    if (ip == null) throw Exception('Couldn\'t get device ip');
+    return ip.replaceAllMapped(RegExp('[١-٩]'), arabicToEnglish);
+  }
+
   @override
   Future<List<Device>> get devices async {
     String? ip = await (NetworkInfo().getWifiIP());
@@ -65,8 +72,7 @@ class WifiNetworkDevices implements NetworkDevices {
 
   @override
   Future<Device> get currentDevice async {
-    final ip = await (NetworkInfo().getWifiIP());
-    if (ip == null) throw Exception('Couldn\'t get device ip');
+    final ip = await _myIp;
     return Device(ip);
   }
 }

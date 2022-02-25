@@ -11,6 +11,7 @@ import 'package:path/path.dart' as path;
 class BootStrapCommand extends ICommand {
   @override
   execute() async {
+    print('current ip ${await wifiDevices.currentDevice}');
     // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
       Permission.manageExternalStorage,

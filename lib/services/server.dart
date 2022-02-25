@@ -50,9 +50,6 @@ class DownloadRange {
 class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
-
-  Set<OwnedRoom> get _ownedRooms => _appModel.myRooms;
-  Set<JoinedRoom> get _joinedRooms => _appModel.joinedRooms;
   Set<JoinedRoom> get _accessibleRooms => _appModel.accessibleRooms;
 
   // MiddleWares
