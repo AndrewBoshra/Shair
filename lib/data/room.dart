@@ -38,9 +38,14 @@ class RoomUser {
       name: map['name'],
     );
   }
-  factory RoomUser.formConfig(Config config, {String? code}) {
+  factory RoomUser.formConfig(
+    Config config, {
+
+    ///user code if not given will be generated.
+    String? code,
+  }) {
     return RoomUser(
-      code: code,
+      code: code ?? Generator.uid,
       image: config.character,
       name: config.name,
     );
@@ -63,20 +68,21 @@ class DownloadableFile {
     this.path,
   });
 
-  DownloadableFile.newFile(
-      {required this.url,
-      required this.name,
-      this.size,
-      required this.path,
-      required this.owner})
-      : id = Generator.uid;
+  DownloadableFile.newFile({
+    required this.url,
+    required this.name,
+    this.size,
+    required this.path,
+    required this.owner,
+  }) : id = Generator.uid;
 
-  DownloadableFile.fromBaseUrl(
-      {required String baseUrl,
-      required this.name,
-      this.path,
-      int? size,
-      required this.owner}) {
+  DownloadableFile.fromBaseUrl({
+    required String baseUrl,
+    required this.name,
+    this.path,
+    int? size,
+    required this.owner,
+  }) {
     id = Generator.uid;
     url = baseUrl + id;
   }
@@ -195,7 +201,14 @@ class JoinedRoom extends Room {
     String? image,
     this.webSocket,
   }) : super(
-            id: id, image: image, name: name, isLocked: isLocked, owner: owner);
+          id: id,
+          image: image,
+          name: name,
+          isLocked: isLocked,
+          owner: owner,
+        ) {
+    _participants.add(currentUser);
+  }
 
   /// Current Device id in this room.
   Set<SharedFile> _files = {};
@@ -203,8 +216,11 @@ class JoinedRoom extends Room {
   RoomUser currentUser;
   String? get idInRoom => currentUser.code;
 
-  factory JoinedRoom.fromMap(Map<String, dynamic> map, RoomUser currentUser,
-      {Device? owner}) {
+  factory JoinedRoom.fromMap(
+    Map<String, dynamic> map,
+    RoomUser currentUser, {
+    Device? owner,
+  }) {
     final _room = Room.fromMap(map);
 
     final room = JoinedRoom(
@@ -248,6 +264,10 @@ class JoinedRoom extends Room {
   ///add new user to this room with given code
   bool add(String code) {
     return _participants.add(RoomUser(code: code));
+  }
+
+  bool containsFile(SharedFile file) {
+    return files.contains(file);
   }
 
   void addFiles(Iterable<SharedFile> files) {
@@ -303,7 +323,6 @@ class OwnedRoom extends JoinedRoom {
       participant.webSocket = ws;
       participant.image = image;
       participant.name = name;
-      print('say welcome to $name to our Room');
       return true;
     }
     return false;
@@ -312,7 +331,6 @@ class OwnedRoom extends JoinedRoom {
   void notifyAll(SocketMessage action) async {
     try {
       for (final participant in _participants) {
-        print('will notify ${participant.name} ');
         participant.webSocket?.sink.add(action.toJson());
       }
     } catch (e) {

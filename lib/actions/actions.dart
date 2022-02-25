@@ -26,6 +26,7 @@ class JoinRequest extends IActionRequired {
       code = Generator.uid;
       room.add(code);
     }
+    print('new join request respond with code $code');
     return JoinResponse(accepted ?? false, code: code);
   }
 }

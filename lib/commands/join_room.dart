@@ -13,7 +13,6 @@ class JoinRoomCommand extends ICommand {
   final Room room;
   final BuildContext context;
   JoinRoomCommand(this.context, this.room);
-  Config get config => context.read<Config>();
   @override
   execute() async {
     if (room.isOwned) {
@@ -35,7 +34,6 @@ class JoinRoomCommand extends ICommand {
       if (ws == null) return;
       joinRes.webSocket = ws;
       ws.listen((event) {
-        print('YOu have got a message from the host $event');
         server.socketService.handleMessage(event);
       });
       InitSocketMessage.formConfig(config, joinRes, true).execute();

@@ -51,15 +51,17 @@ class ProtectedRoutes {
   final AppModel _appModel;
   late shelf_router.Router _router;
 
-  Set<OwnedRoom> get _rooms => _appModel.myRooms;
+  Set<OwnedRoom> get _ownedRooms => _appModel.myRooms;
+  Set<JoinedRoom> get _joinedRooms => _appModel.joinedRooms;
+  Set<JoinedRoom> get _accessibleRooms => _appModel.accessibleRooms;
 
   // MiddleWares
   shelf.Handler _auth(innerHandler) {
     return (request) {
-      // final userId = request.headers['code'];
-      // if (userId == null) {
-      //   return AppResponse.forbidden({'message': 'user code is required'});
-      // }
+      final userId = request.headers['code'];
+      if (userId == null) {
+        return AppResponse.forbidden({'message': 'user code is required'});
+      }
       return innerHandler(request);
     };
   }
@@ -68,7 +70,7 @@ class ProtectedRoutes {
     return (request) {
       final roomId = request.params['id'];
 
-      final valid = _rooms.any((room) => room.id == roomId);
+      final valid = _accessibleRooms.any((room) => room.id == roomId);
       if (!valid) {
         return AppResponse.notFound({});
       }
@@ -80,7 +82,7 @@ class ProtectedRoutes {
     return (request) {
       final roomId = request.params['id']!;
       final userCode = request.headers['code']!;
-      final room = _rooms.firstWhere((room) => room.id == roomId);
+      final room = _accessibleRooms.firstWhere((room) => room.id == roomId);
 
       if (room.isInRoom(userCode)) {
         return innerHandler(request);
@@ -97,7 +99,10 @@ class ProtectedRoutes {
 
   Future<AppResponse> _joinRoom(shelf.Request req) async {
     final id = req.params['id']!;
-    final room = _getRoomWithId(id)!;
+    final room = _getRoomWithId(id);
+    if (room == null) {
+      return AppResponse.notFound({'message': 'room is not mine'});
+    }
     final body = await req.body;
     final personDetails = PersonDetails.fromMap(body);
 
@@ -107,7 +112,6 @@ class ProtectedRoutes {
       room: room,
     );
     _appModel.actionsSink.add(joinRequest);
-
     final joinResponse = await _appModel.responseStream
         .firstWhere((res) => res.id == joinRequest.id);
     if (joinResponse is! JoinResponse || !joinResponse.isAccepted) {
@@ -135,15 +139,19 @@ class ProtectedRoutes {
     final stat = await file.stat();
     final range = DownloadRange.fromHeaders(req.headers, stat);
 
-    return shelf.Response(206,
-        body: file.openRead(range.start, range.end),
-        headers: {
-          'content-type': mime,
-          'content-disposition': 'attachment; filename=${sharedFile.file.name}',
-          'content-length': range.size.toString(),
-          'content-range': 'bytes ${range.start} - ${range.end} / ${stat.size}',
-          "accept-ranges": "bytes",
-        });
+    return shelf.Response(
+      206,
+      body: file.openRead(range.start, range.end),
+      encoding: const Utf8Codec(),
+      headers: {
+        'content-type': mime,
+        'content-disposition':
+            'attachment; filename=${utf8.encode(sharedFile.file.name)}',
+        'content-length': range.size.toString(),
+        'content-range': 'bytes ${range.start} - ${range.end} / ${stat.size}',
+        "accept-ranges": "bytes",
+      },
+    );
   }
 
   //////////////////////////
@@ -151,7 +159,7 @@ class ProtectedRoutes {
   //////////////////////////
 
   OwnedRoom? _getRoomWithId(String roomId) {
-    final matchingRooms = _rooms.where((room) => room.id == roomId);
+    final matchingRooms = _ownedRooms.where((room) => room.id == roomId);
     if (matchingRooms.isEmpty) null;
     return matchingRooms.first;
   }

@@ -61,18 +61,18 @@ class RestClient {
     }
   }
 
-  Future<File?> downloadFileFormRoom(
-      DownloadableFile downloadableFile, JoinedRoom room) async {
-    final res = await _api.getFile(downloadableFile.url, code: room.idInRoom);
-    final dataPath = await path_provider.getApplicationDocumentsDirectory();
-    final filePath = path.join(dataPath.path, 'Shair', downloadableFile.name);
-    if (res.hasError) return null;
+  // Future<File?> downloadFileFormRoom(
+  //     DownloadableFile downloadableFile, JoinedRoom room) async {
+  //   final res = await _api.getFile(downloadableFile.url, code: room.idInRoom);
+  //   final dataPath = await path_provider.getApplicationDocumentsDirectory();
+  //   final filePath = path.join(dataPath.path, 'Shair', downloadableFile.name);
+  //   if (res.hasError) return null;
 
-    final savedFile = File(filePath);
-    final openedFile = await savedFile.create();
-    await openedFile.writeAsBytes(res.response!.bodyBytes);
-    return openedFile;
-  }
+  //   final savedFile = File(filePath);
+  //   final openedFile = await savedFile.create();
+  //   await openedFile.writeAsBytes(res.response!.bodyBytes);
+  //   return openedFile;
+  // }
   // Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
   //   //owned by this device
   //   if (room.owner == null) return room;

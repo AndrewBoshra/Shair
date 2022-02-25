@@ -290,7 +290,6 @@ class SocketService {
     handler = webSocketHandler((WebSocketChannel ws) {
       ws.stream.listen((message) {
         try {
-          print('You have got a message $message');
           handleMessage(message, ws);
         } catch (e) {
           print(e.toString());

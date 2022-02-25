@@ -2,6 +2,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/download_file.dart';
+import 'package:shair/commands/launch_file.dart';
 
 import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/app_theme.dart';
@@ -25,27 +27,59 @@ class SharedFileTile extends StatelessWidget {
   Downloader? get downloader => sharedFile.downloader;
 
   Widget _buildFileData(TextTheme textTheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Flexible(
-          child: Text(
-            file.name,
-            style: textTheme.subtitle2,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (sharedFile.isDownloading)
-          Text(
-            '${downloader?.percentage}%',
-            style: textTheme.overline,
-          ),
-      ]),
+    return Text(
+      file.name,
+      style: textTheme.subtitle2,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
-  Widget _buildProgressBar(AppTheme appTheme, int progress, Widget fileData) {
+  Widget _buildProgressBar(
+      AppTheme appTheme, TextTheme textTheme, int progress, Widget fileData) {
+    final downloadData = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Spacers.kPaddingSmall),
+      child: StreamBuilder<DownloadState>(
+          stream: downloader?.stateStream,
+          builder: (context, snapshot) {
+            return IconTheme(
+              data: IconThemeData(color: appTheme.onSecondaryColor),
+              child: Row(
+                children: [
+                  if (downloader?.state == DownloadState.paused)
+                    IconButton(
+                      onPressed: downloader?.resume,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                    ),
+                  if (downloader?.state == DownloadState.downloading)
+                    IconButton(
+                      onPressed: downloader?.pause,
+                      icon: const Icon(Icons.pause),
+                    ),
+                  if (downloader?.state == DownloadState.finished)
+                    IconButton(
+                      onPressed: () => LaunchFileCommand(
+                        sharedFile: sharedFile,
+                      ).execute(),
+                      icon: const Icon(Icons.folder_open_rounded),
+                    ),
+                  Flexible(
+                    fit: FlexFit.tight,
+                    child: fileData,
+                  ),
+                  Text('$progress%', style: textTheme.caption)
+                ],
+              ),
+            );
+          }),
+    );
+    if (downloader?.state == DownloadState.finished) {
+      return _buildOwnedFile(
+        appTheme,
+        downloadData,
+        color: appTheme.successColor,
+      );
+    }
     return LiquidLinearProgressIndicator(
       value: progress / 100, // Defaults to 0.5.
       valueColor: AlwaysStoppedAnimation(
@@ -56,16 +90,44 @@ class SharedFileTile extends StatelessWidget {
       borderWidth: -100,
       borderColor: Colors.transparent,
       direction: Axis.horizontal,
-      center: fileData,
+      center: downloadData,
     );
   }
 
-  Widget _buildOwnedFile(AppTheme appTheme, Widget fileData) {
-    return ColoredBox(color: appTheme.primaryVarColor, child: fileData);
+  Widget _buildOwnedFile(AppTheme appTheme, Widget fileData, {Color? color}) {
+    return ColoredBox(
+      color: color ?? appTheme.primaryVarColor,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: Spacers.kPadding,
+          ),
+          child: fileData,
+        ),
+      ),
+    );
   }
 
   Widget _buildFile(AppTheme appTheme, Widget fileData) {
-    return ColoredBox(color: appTheme.secondaryVarColor, child: fileData);
+    return ColoredBox(
+      color: appTheme.secondaryVarColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Spacers.kPadding),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(child: fileData),
+            IconButton(
+              icon: Icon(Icons.download, color: appTheme.onSecondaryColor),
+              onPressed: () {
+                DownloadFileCommand(room, sharedFile).execute();
+              },
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -86,19 +148,17 @@ class SharedFileTile extends StatelessWidget {
         initialData: 0,
         stream: downloader!.progressStream,
         builder: (context, snapshot) {
-          return _buildProgressBar(appTheme, snapshot.data!, fileData);
+          return _buildProgressBar(
+              appTheme, textTheme, snapshot.data!, fileData);
         },
       );
     }
 
-    return GestureDetector(
-      onTap: () {},
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: SizedBox(
-          height: 50,
-          child: child,
-        ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(5),
+      child: SizedBox(
+        height: 50,
+        child: child,
       ),
     );
   }
@@ -166,7 +226,7 @@ class RoomScreen extends StatelessWidget {
     return room.files
         .map(
           (f) => Padding(
-            padding: const EdgeInsets.only(bottom: Spacers.kPaddingSmall),
+            padding: const EdgeInsets.only(top: Spacers.kPaddingSmall),
             child: SharedFileTile(
               sharedFile: f,
               room: room,
