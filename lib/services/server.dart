@@ -21,7 +21,7 @@ class DownloadRange {
   final int end;
   DownloadRange._(this.start, this.end);
 
-  int get size => end - start + 1;
+  int get size => end - start;
   factory DownloadRange.fromHeaders(
       Map<String, String?> headers, FileStat stat) {
     final size = stat.size;
@@ -99,8 +99,8 @@ class ProtectedRoutes {
 
   Future<AppResponse> _joinRoom(shelf.Request req) async {
     final id = req.params['id']!;
-    final room = _getRoomWithId(id);
-    if (room == null) {
+    final room = _getAccessibleRoomWithId(id);
+    if (room is! OwnedRoom) {
       return AppResponse.notFound({'message': 'room is not mine'});
     }
     final body = await req.body;
@@ -124,7 +124,7 @@ class ProtectedRoutes {
   Future<shelf.Response> _getFile(shelf.Request req) async {
     final fileId = req.params['file-id']!;
     final roomId = req.params['id']!;
-    final room = _getRoomWithId(roomId)!;
+    final room = _getAccessibleRoomWithId(roomId)!;
 
     final myFiles = room.myFiles;
     final files = myFiles.where((sharedFile) => sharedFile.file.id == fileId);
@@ -158,9 +158,9 @@ class ProtectedRoutes {
   //       Helpers        //
   //////////////////////////
 
-  OwnedRoom? _getRoomWithId(String roomId) {
-    final matchingRooms = _ownedRooms.where((room) => room.id == roomId);
-    if (matchingRooms.isEmpty) null;
+  JoinedRoom? _getAccessibleRoomWithId(String roomId) {
+    final matchingRooms = _accessibleRooms.where((room) => room.id == roomId);
+    if (matchingRooms.isEmpty) return null;
     return matchingRooms.first;
   }
 
@@ -187,7 +187,7 @@ class ProtectedRoutes {
 
 class RestServer {
   final AppModel _appModel;
-  Set<JoinedRoom> get _rooms => _appModel.myRooms;
+  Set<OwnedRoom> get _rooms => _appModel.myRooms;
   late shelf_router.Router router;
   HttpServer? _server;
   late final ProtectedRoutes _protectedRoutes;
@@ -200,7 +200,7 @@ class RestServer {
         'status': 'ok',
         'isRunning': true,
         'app': 'shair',
-        'rooms': _rooms.map((e) => e.toMap()).toList()
+        'rooms': _rooms.map((e) => e.toMap(false, false)).toList()
       },
     );
   }

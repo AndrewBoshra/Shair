@@ -32,7 +32,7 @@ class RestClient {
   Future<JoinedRoom?> askToJoin(
     Room room,
     Config config,
-    String code,
+    String? code,
     String ip,
   ) async {
     final res = await _api.post('${room.owner!.url}/room/${room.id}/join',

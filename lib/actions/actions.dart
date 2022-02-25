@@ -19,8 +19,13 @@ class JoinRequest extends IActionRequired {
   });
   @override
   FutureOr<JoinResponse> respond() async {
-    bool? accepted =
-        await Dialogs.showJoinRequestDialog(RootNavigator.nav!.context, this);
+    bool? accepted;
+    if (!room.isLocked) {
+      accepted = true;
+    } else {
+      accepted =
+          await Dialogs.showJoinRequestDialog(RootNavigator.nav!.context, this);
+    }
     String? code;
     if (accepted == true) {
       code = Generator.uid;

@@ -18,8 +18,11 @@ class JoinRoomCommand extends ICommand {
     if (room.isOwned) {
       return;
     }
-    String idInRoom = Generator.userId;
-    Dialogs.showJoinCodeDialog(context, idInRoom);
+    String? idInRoom;
+    if (room.isLocked) {
+      idInRoom = Generator.userId;
+      Dialogs.showJoinCodeDialog(context, idInRoom);
+    }
     final device = await wifiDevices.currentDevice;
     final joinRes = await client.askToJoin(room, config, idInRoom, device.ip);
 

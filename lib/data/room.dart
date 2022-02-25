@@ -96,13 +96,13 @@ class DownloadableFile {
   @override
   int get hashCode => url.hashCode;
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap([bool includeOwnerCode = false]) {
     return {
       'url': url,
       'size': size,
       'id': id,
       'name': name,
-      'owner': owner?.toMap(),
+      'owner': owner?.toMap(includeOwnerCode),
     };
   }
 
@@ -156,7 +156,7 @@ class Room {
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
 
-  Map<String, Object?> toMap([bool includeFiles = false]) {
+  Map<String, Object?> toMap() {
     return {
       'id': id,
       'name': name,
@@ -169,7 +169,7 @@ class Room {
     return Room(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      isLocked: map['isLocked'] == 'true',
+      isLocked: map['isLocked'] ?? true,
       image: map['image'],
       owner: owner,
     );
@@ -210,10 +210,10 @@ class JoinedRoom extends Room {
     _participants.add(currentUser);
   }
 
-  /// Current Device id in this room.
+  /// Current Device user in this room.
+  RoomUser currentUser;
   Set<SharedFile> _files = {};
   WebSocket? webSocket;
-  RoomUser currentUser;
   String? get idInRoom => currentUser.code;
 
   factory JoinedRoom.fromMap(
@@ -236,10 +236,14 @@ class JoinedRoom extends Room {
     room._files = filesRaw
         .map((fr) => SharedFile(file: DownloadableFile.fromMap(fr)))
         .toSet();
+
+    final participantsRaw = (map['participants'] ?? []) as List;
+    room._participants =
+        participantsRaw.map((map) => RoomUser.fromMap(map)).toSet();
     return room;
   }
 
-  final Set<RoomUser> _participants = {};
+  Set<RoomUser> _participants = {};
 
   UnmodifiableSetView<RoomUser> get participants =>
       UnmodifiableSetView<RoomUser>(_participants);
@@ -336,5 +340,24 @@ class OwnedRoom extends JoinedRoom {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  Set<RoomUser> get activeParticipants =>
+      _participants.where((p) => p.webSocket != null).toSet()..add(currentUser);
+  @override
+  Map<String, dynamic> toMap(
+      [bool includeFiles = true,
+      bool includeUsers = true,
+      bool includeUserCodes = true]) {
+    final m = {
+      ...super.toMap(),
+      if (includeFiles)
+        'files': _files.map((df) => df.file.toMap(includeUserCodes)).toList(),
+      if (includeUsers)
+        'participants':
+            activeParticipants.map((e) => e.toMap(includeUserCodes)).toList(),
+    };
+    print(m);
+    return m;
   }
 }

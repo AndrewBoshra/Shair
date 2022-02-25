@@ -18,7 +18,6 @@ class HomeScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final appTheme = AppTheme.of(context);
     final appModel = AppModel.of(context);
-
     return Scaffold(
       body: Stack(
         children: [

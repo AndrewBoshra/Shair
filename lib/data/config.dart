@@ -109,9 +109,9 @@ class Config extends Saveable with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> setDefaultDownloadPath(String path) async {
-    if (!await Directory(path).exists()) return false;
-    _defaultDownloadPath = path;
+  Future<bool> setDefaultDownloadPath(Directory dir) async {
+    dir = await dir.create(recursive: true);
+    _defaultDownloadPath = dir.path;
     notifyListeners();
     return true;
   }
