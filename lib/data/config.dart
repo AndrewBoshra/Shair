@@ -40,16 +40,29 @@ class PersonDetails {
     return PersonDetails(
       name: map[_nameStr].toString(),
       character: map[_characterStr] != null
-          ? CharacterImage(map[_characterStr] as String, isImageLocal)
+          ? CharacterImage.fromStr(
+              uri: map[_characterStr] as String,
+              isLocal: isImageLocal,
+            )
           : null,
     );
   }
 
   Map<String, Object?> toMap() {
     return {
-      _characterStr: character?.path,
+      _characterStr: character?.url,
       _nameStr: name,
     };
+  }
+
+  PersonDetails copyWith({
+    CharacterImage? character,
+    String? name,
+  }) {
+    return PersonDetails(
+      character: character ?? this.character,
+      name: name ?? this.name,
+    );
   }
 }
 
@@ -96,8 +109,9 @@ class Config extends Saveable with ChangeNotifier {
   Config readFromMap(Map<String, Object?> map) {
     _isFirstTime = (map[_isFirstTimeStr] as bool?) ?? true;
     _defaultDownloadPath = map[_downloadPathStr] as String?;
-    personDetails =
-        PersonDetails.fromMap((map[_personStr] as Map<String, Object?>?) ?? {});
+    personDetails = PersonDetails.fromMap(
+        (map[_personStr] as Map<String, Object?>?) ?? {},
+        isImageLocal: true);
     _theme = themeFromString(map[_themeStr] as String?);
     notifyListeners();
     return this;

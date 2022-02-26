@@ -36,7 +36,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   void _createRoom() async {
     if (_formKey.currentState?.validate() == true) {
-      final room = CreateRoomCommand(
+      final room = await CreateRoomCommand(
         _nameEditController.value.text,
         _roomImage,
         _isLocked,

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:shair/actions/actions.dart';
+import 'package:shair/app_globals.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/services/network_devices.dart';
@@ -192,6 +193,7 @@ class RestServer {
   SocketService get socketService => _protectedRoutes.socketService;
 
   static String get userImagePath => '/user-image';
+
   AppResponse _getRooms(shelf.Request req) {
     return AppResponse.ok(
       {
@@ -203,11 +205,27 @@ class RestServer {
     );
   }
 
+  shelf.Response _getImage(shelf.Request req) {
+    final imagePath = AppGlobals.config.character?.path;
+    if (imagePath == null) {
+      return AppResponse.notFound({'message': "user has no image"});
+    }
+    final mime = lookupMimeType(imagePath);
+    return shelf.Response(
+      200,
+      body: File(imagePath).openRead(),
+      headers: {
+        'content-type': mime ?? 'image/',
+      },
+    );
+  }
+
   RestServer(this._appModel) {
     router = shelf_router.Router();
     _protectedRoutes = ProtectedRoutes(_appModel);
     router
       ..get('/', _getRooms)
+      ..get(userImagePath, _getImage)
       ..mount('/room', _protectedRoutes.router);
   }
 

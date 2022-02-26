@@ -95,7 +95,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
                   }
                   final characters = snapshot.data!
                       .map((iPath) => CharacterAvatar(
-                          characterImage: CharacterImage(iPath, true)))
+                          characterImage: CharacterImage(path: iPath)))
                       .toList();
                   return CarouselSlider(
                     carouselController: _carouselController,
@@ -122,7 +122,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
     if (isValid == null || !isValid) return;
     final config = context.read<Config>();
     config.name = _textController.value.text;
-    config.character = CharacterImage(_selectedCharacter, true);
+    config.character = CharacterImage(path: _selectedCharacter);
     config.isFirstTime = false;
 
     config.save();

@@ -1,19 +1,37 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:shair/data/assets.dart';
 
-import 'package:shair/data/room.dart';
+import 'package:shair/data/assets.dart';
 
 const _shadowSize = 20.0;
 
 class CharacterImage {
-  final String path;
-  final bool isLocal;
-  CharacterImage(this.path, this.isLocal);
+  final String? path;
+  final String? url;
+  bool get isLocal => path != null;
+  CharacterImage({this.path, this.url}) : assert(path != null || url != null);
+
   ImageProvider get image => isLocal
-      ? FileImage(File(path))
-      : NetworkImage(path) as ImageProvider<Object>;
+      ? FileImage(File(path!))
+      : NetworkImage(url!) as ImageProvider<Object>;
+
+  factory CharacterImage.fromStr({required String uri, required bool isLocal}) {
+    if (isLocal) {
+      return CharacterImage(path: uri);
+    }
+    return CharacterImage(url: uri);
+  }
+
+  CharacterImage copyWith({
+    String? path,
+    String? url,
+  }) {
+    return CharacterImage(
+      path: path ?? this.path,
+      url: url ?? this.url,
+    );
+  }
 }
 
 class CharacterAvatar extends StatelessWidget {
@@ -54,11 +72,10 @@ class CharacterAvatar extends StatelessWidget {
 }
 
 class RoomAvatar extends StatelessWidget {
-  const RoomAvatar({
-    Key? key,
-    required this.characterImage,
-  }) : super(key: key);
+  const RoomAvatar({Key? key, required this.characterImage, this.radius})
+      : super(key: key);
   final CharacterImage? characterImage;
+  final double? radius;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +84,7 @@ class RoomAvatar extends StatelessWidget {
     return CircleAvatar(
       foregroundImage: characterImage?.image ?? placeHolder,
       backgroundImage: placeHolder,
+      radius: radius,
     );
   }
 }

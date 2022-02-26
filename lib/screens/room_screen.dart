@@ -16,6 +16,12 @@ import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/gradient.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
+import 'package:shair/utils/extensions.dart';
+
+const _kBorderRadius = 20.0;
+const _r = Radius.circular(_kBorderRadius);
+const _kSenderBorder =
+    BorderRadius.only(bottomLeft: _r, topLeft: _r, topRight: _r);
 
 class SharedFileTile extends StatelessWidget {
   const SharedFileTile({Key? key, required this.sharedFile, required this.room})
@@ -135,11 +141,11 @@ class SharedFileTile extends StatelessWidget {
     final appTheme = AppTheme.of(context);
     final textTheme =
         Theme.of(context).textTheme.colorize(appTheme.onSecondaryColor);
-
+    final isOwned = room.isMine(sharedFile);
     late Widget child;
     final fileData = _buildFileData(textTheme);
 
-    if (room.isMine(sharedFile)) {
+    if (isOwned) {
       child = _buildOwnedFile(appTheme, fileData);
     } else if (!sharedFile.isDownloading) {
       child = _buildFile(appTheme, fileData);
@@ -154,12 +160,33 @@ class SharedFileTile extends StatelessWidget {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(5),
-      child: SizedBox(
-        height: 50,
-        child: child,
+    child = ClipRRect(
+      borderRadius: isOwned ? _kSenderBorder : _kSenderBorder.flipped(),
+      child: child,
+    );
+
+    final ownerData = [
+      Text(
+        file.owner?.name ?? '',
+        style: textTheme.caption?.copyWith(color: appTheme.onBackgroundColor),
       ),
+      const SizedBox(width: 2),
+      RoomAvatar(
+          characterImage: file.owner?.userImage, radius: _kBorderRadius / 2)
+    ];
+    return Column(
+      children: [
+        SizedBox(
+          height: 50,
+          child: child,
+        ),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisAlignment:
+              isOwned ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: isOwned ? ownerData : ownerData.reversed.toList(),
+        )
+      ],
     );
   }
 }

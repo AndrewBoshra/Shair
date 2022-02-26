@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shair/app_globals.dart';
 import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as path;
+import 'package:shair/styled_components/avatar.dart';
 
 class RestClient {
   final Api _api = Api();
@@ -23,7 +25,6 @@ class RestClient {
     final rooms = <Room>[];
     for (final raw in roomsRaw) {
       final room = Room.fromMap(raw, owner: device);
-
       rooms.add(room);
     }
     return rooms;
@@ -35,23 +36,32 @@ class RestClient {
     String? code,
     String ip,
   ) async {
-    final res = await _api.post('${room.owner!.url}/room/${room.id}/join',
-        code: code, personDetails: config.personDetails, body: {'ip': ip});
+    final currentDevice = await AppGlobals.wifiDevices.currentDevice;
+
+    final res = await _api.post(
+      '${room.owner.url}/room/${room.id}/join',
+      code: code,
+      personDetails: config.personDetails
+          .copyWith(character: CharacterImage(url: currentDevice.imageUrl)),
+      body: {'ip': ip},
+    );
 
     if (res.hasError) return null;
-    final currentUser = RoomUser.formConfig(config,
-        code: res.parsedResponse!['code'] as String?);
-    return JoinedRoom.fromMap(res.parsedResponse!, currentUser,
-        owner: room.owner);
+    final currentUser = RoomUser.formConfig(
+      config,
+      code: res.parsedResponse!['code'] as String?,
+    );
+    return JoinedRoom.fromMap(
+      res.parsedResponse!,
+      currentUser,
+      owner: room.owner,
+    );
   }
 
   Future<WebSocket?> join(JoinedRoom room) async {
-    if (room.owner == null) {
-      return room.webSocket;
-    }
     try {
       final ws = await WebSocket.connect(
-          '${room.owner!.socketUrl}/room/${room.id}/channel',
+          '${room.owner.socketUrl}/room/${room.id}/channel',
           headers: {'code': room.idInRoom});
       room.webSocket = ws;
       return ws;

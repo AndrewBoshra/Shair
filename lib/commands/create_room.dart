@@ -9,14 +9,19 @@ class CreateRoomCommand extends ICommand {
   final String? image;
   final bool isLocked;
   @override
-  Room execute() {
+  Future<Room> execute() async {
     final config = AppGlobals.config;
+    final device = await wifiDevices.currentDevice;
     final room = OwnedRoom(
-      name: name,
-      isLocked: isLocked,
-      roomImage: image != null ? CharacterImage(image!, true) : null,
-      currentUser: RoomUser.formConfig(config),
-    );
+        name: name,
+        isLocked: isLocked,
+        roomImage: image != null
+            ? CharacterImage(
+                path: image,
+              )
+            : null,
+        currentUser: RoomUser.formConfig(config, imgUrl: device.imageUrl),
+        owner: device);
     appModel.addRoomToMyRooms(room);
     return room;
   }

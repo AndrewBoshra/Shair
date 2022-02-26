@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:shair/services/server.dart';
 import 'package:shair/utils/utils.dart';
 
 const kPort = 4560;
@@ -10,6 +11,7 @@ const kPort = 4560;
 class Device {
   final String ip;
   String get url => 'http://$ip:$kPort';
+  String get imageUrl => '$url${RestServer.userImagePath}';
   String get socketUrl => 'ws://$ip:$kPort';
   Device(this.ip);
 
@@ -57,8 +59,7 @@ class WifiNetworkDevices implements NetworkDevices {
 
   @override
   Future<List<Device>> get devices async {
-    String? ip = await (NetworkInfo().getWifiIP());
-    ip ??= '192.168.1.0';
+    String? ip = await _myIp;
     final String subnet = ip.substring(0, ip.lastIndexOf('.'));
     final stream = HostScanner.discover(subnet,
         firstSubnet: 1, lastSubnet: 50, progressCallback: (progress) {});

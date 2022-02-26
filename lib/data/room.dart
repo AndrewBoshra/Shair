@@ -5,15 +5,16 @@ import 'package:shair/data/config.dart';
 import 'package:shair/services/downloader.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:shair/services/server.dart';
 import 'package:shair/services/socket.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class RoomUser {
-  RoomUser({this.name, this.image, this.code, this.webSocket});
+  RoomUser({this.name, this.userImage, this.code, this.webSocket});
   WebSocketChannel? webSocket;
   String? code;
-  CharacterImage? image;
+  CharacterImage? userImage;
   String? name;
 
   @override
@@ -27,27 +28,30 @@ class RoomUser {
   Map<String, dynamic> toMap([bool includeCode = false]) {
     return {
       if (includeCode) 'code': code,
-      'image': image,
+      'image': userImage?.url,
       'name': name,
     };
   }
 
-  factory RoomUser.fromMap(Map<String, dynamic> map) {
+  factory RoomUser.fromMap(Map<String, dynamic> map,
+      {bool isImageLocal = false}) {
     return RoomUser(
       code: map['code'],
-      image: map['image'],
+      userImage: map['image'] != null
+          ? CharacterImage.fromStr(uri: map['image'], isLocal: isImageLocal)
+          : null,
       name: map['name'],
     );
   }
-  factory RoomUser.formConfig(
-    Config config, {
+  factory RoomUser.formConfig(Config config,
+      {
 
-    ///user code if not given will be generated.
-    String? code,
-  }) {
+      ///user code if not given will be generated.
+      String? code,
+      String? imgUrl}) {
     return RoomUser(
       code: code ?? Generator.uid,
-      image: config.character,
+      userImage: config.character?.copyWith(url: imgUrl),
       name: config.name,
     );
   }
@@ -143,14 +147,14 @@ class Room {
   final CharacterImage? roomImage;
 
   /// this is null in case this device is the owner of this room
-  Device? owner;
+  Device owner;
 
   Room({
     String? id,
     required this.name,
     required this.isLocked,
+    required this.owner,
     this.roomImage,
-    this.owner,
   }) {
     this.id = id ?? Generator.uid;
   }
@@ -162,18 +166,18 @@ class Room {
       'id': id,
       'name': name,
       'isLocked': isLocked,
-      'image': roomImage?.path
+      'image': owner.imageUrl,
     };
   }
 
   factory Room.fromMap(Map<String, dynamic> map,
-      {Device? owner, bool isImageLocal = false}) {
+      {required Device owner, bool isImageLocal = false}) {
     return Room(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       isLocked: map['isLocked'] ?? true,
       roomImage: map['image'] != null
-          ? CharacterImage(map['image'] as String, isImageLocal)
+          ? CharacterImage.fromStr(uri: map['image'], isLocal: isImageLocal)
           : null,
       owner: owner,
     );
@@ -199,8 +203,8 @@ class JoinedRoom extends Room {
   JoinedRoom({
     required String name,
     required bool isLocked,
-    required this.currentUser,
-    Device? owner,
+    required RoomUser currentUser,
+    required Device owner,
     String? id,
     CharacterImage? roomImage,
     this.webSocket,
@@ -211,11 +215,21 @@ class JoinedRoom extends Room {
           isLocked: isLocked,
           owner: owner,
         ) {
-    _participants.add(currentUser);
+    this.currentUser = currentUser;
   }
 
   /// Current Device user in this room.
-  RoomUser currentUser;
+  late RoomUser _currentUser;
+
+  /// Current Device user in this room.
+  RoomUser get currentUser => _currentUser;
+
+  /// Current Device user in this room.
+  set currentUser(RoomUser currentUser) {
+    _currentUser = currentUser;
+    _participants.add(currentUser);
+  }
+
   Set<SharedFile> _files = {};
   WebSocket? webSocket;
   String? get idInRoom => currentUser.code;
@@ -223,27 +237,36 @@ class JoinedRoom extends Room {
   factory JoinedRoom.fromMap(
     Map<String, dynamic> map,
     RoomUser currentUser, {
-    Device? owner,
+    required Device owner,
   }) {
-    final _room = Room.fromMap(map);
+    final _room = Room.fromMap(map, owner: owner);
 
     final room = JoinedRoom(
       name: _room.name,
       isLocked: _room.isLocked,
       id: _room.id,
       roomImage: _room.roomImage,
-      owner: owner ?? _room.owner,
+      owner: _room.owner,
       currentUser: currentUser,
     );
+    final participantsRaw = (map['participants'] ?? []) as List;
+
+    final others = participantsRaw
+        .map((map) => RoomUser.fromMap(map))
+        .where((user) => user != currentUser)
+        .toSet();
+
+    room._participants.addAll(others);
 
     final filesRaw = (map['files'] ?? []) as List;
     room._files = filesRaw
         .map((fr) => SharedFile(file: DownloadableFile.fromMap(fr)))
         .toSet();
-
-    final participantsRaw = (map['participants'] ?? []) as List;
-    room._participants =
-        participantsRaw.map((map) => RoomUser.fromMap(map)).toSet();
+    for (final sFile in room._files) {
+      final file = sFile.file;
+      file.owner =
+          room._participants.firstWhere((pr) => pr.code == file.owner?.code);
+    }
     return room;
   }
 
@@ -308,7 +331,7 @@ class OwnedRoom extends JoinedRoom {
     required String name,
     required bool isLocked,
     required RoomUser currentUser,
-    Device? owner,
+    required Device owner,
     String? id,
     CharacterImage? roomImage,
   }) : super(
@@ -330,7 +353,7 @@ class OwnedRoom extends JoinedRoom {
       if (participant.webSocket != null) return false;
       participant.webSocket = ws;
       if (image != null) {
-        participant.image = CharacterImage(image, false);
+        participant.userImage = CharacterImage(url: image);
       }
       participant.name = name;
       return true;

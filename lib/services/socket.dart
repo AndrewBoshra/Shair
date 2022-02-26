@@ -162,8 +162,11 @@ class ShareFileMessage extends ActionMessage {
   }) : super(room, senderWebSocket, notifyHost);
 
   factory ShareFileMessage.fromDownloadableFile(
-      DownloadableFile file, JoinedRoom room,
-      {WebSocketChannel? webSocket, bool notifyHost = false}) {
+    DownloadableFile file,
+    JoinedRoom room, {
+    WebSocketChannel? webSocket,
+    bool notifyHost = false,
+  }) {
     return ShareFileMessage(
       room: room,
       fileUrl: file.url,
