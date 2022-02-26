@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:shair/data/assets.dart';
@@ -7,14 +8,16 @@ import 'package:shair/data/assets.dart';
 const _shadowSize = 20.0;
 
 class CharacterImage {
-  final String? path;
-  final String? url;
+  String? path;
+  String? url;
   bool get isLocal => path != null;
   CharacterImage({this.path, this.url}) : assert(path != null || url != null);
 
   ImageProvider get image => isLocal
       ? FileImage(File(path!))
-      : NetworkImage(url!) as ImageProvider<Object>;
+      : CachedNetworkImageProvider(url!, errorListener: () async {
+          path = await ImageAssets.defaultCharacter;
+        }) as ImageProvider<Object>;
 
   factory CharacterImage.fromStr({required String uri, required bool isLocal}) {
     if (isLocal) {

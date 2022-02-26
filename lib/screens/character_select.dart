@@ -43,7 +43,7 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
   final _textController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  String _selectedCharacter = ImageAssets.getAllCharacter()[0];
+  String? _selectedCharacter;
 
   Map<ShortcutActivator, Intent> _keyboardShortCuts(BuildContext context) {
     return {
@@ -92,6 +92,9 @@ class _CharacterSelectScreenState extends State<CharacterSelectScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
+                  }
+                  if (snapshot.data!.isNotEmpty) {
+                    _selectedCharacter ??= snapshot.data!.first;
                   }
                   final characters = snapshot.data!
                       .map((iPath) => CharacterAvatar(

@@ -22,6 +22,7 @@ class Downloader {
   IOSink? _downloadedFileSink;
   DownloadState _state = DownloadState.stopped;
   String? get downloadedFilePath => downloadedFile?.path;
+  Object? error;
 
   final StreamController<int> _progressController =
       StreamController<int>.broadcast();
@@ -95,7 +96,6 @@ class Downloader {
     }
 
     _size = _parseSize(resStream.headers);
-    print('size $_size');
     String fileName = _parseFileName(resStream.headers);
 
     _downloadedFile = File(path.join(downloadPath, fileName));
@@ -110,14 +110,16 @@ class Downloader {
     // adds the request body parts to the file
     _downloadStreamSubscription = resStream.stream.listen(
       _handleIncomingData,
-      onDone: () => _updateState(DownloadState.finished),
-      onError: (e) {
-        if (percentage == 100) {
-          _updateState(DownloadState.finished);
-          _progressSink.add(100);
-        } else {
+      onDone: () {
+        if (percentage < 100) {
           _updateState(DownloadState.stopped);
+        } else {
+          _updateState(DownloadState.finished);
         }
+        _progressSink.add(percentage);
+      },
+      onError: (e) {
+        error = e;
         debugPrint(e.toString());
       },
     );

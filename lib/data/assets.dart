@@ -39,7 +39,8 @@ abstract class ImageAssets {
   static const _imagesPath = 'assets/images/';
   static const _characterPath = 'assets/characters/';
   static const String welcomeCharacter = _imagesPath + 'lab.png';
-  static String get defaultCharacter => getAllCharacter()[0];
+  static Future<String> get defaultCharacter async =>
+      (await getCachedCharacterImages())[0];
   static const String logo = _imagesPath + 'logo.png';
   static const String radarLottie = _lottiePath + 'radar.json';
 }

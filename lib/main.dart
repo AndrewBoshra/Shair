@@ -7,7 +7,6 @@ import 'package:shair/constants/colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await BootStrapCommand().execute();
   runApp(
     MultiProvider(
       providers: [

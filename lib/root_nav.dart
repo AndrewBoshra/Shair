@@ -45,8 +45,8 @@ abstract class RootNavigator {
 
   static const String startScreen = '/start';
   static const String characterSelectScreen = '/character';
-  static const String homeScreen = '/';
-  static const String loadingScreen = '/loading';
+  static const String homeScreen = '/home';
+  static const String loadingScreen = '/';
   static const String joinRoomScreen = '/rooms';
   static const String createRoomScreen = '/create-room';
   static const String roomScreen = '/room';
@@ -80,7 +80,8 @@ abstract class RootNavigator {
     nav?.pop(result);
   }
 
-  static Future<T?>? toStartScreen<T>() {
+  static Future<T?>? toStartScreen<T>([bool popAllRoutes = true]) {
+    popAll();
     return _goTo(startScreen);
   }
 

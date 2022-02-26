@@ -1,5 +1,5 @@
 class Failure {
   final String message;
-
-  Failure(this.message);
+  final Object? error;
+  Failure(this.message, [this.error]);
 }

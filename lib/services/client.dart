@@ -15,10 +15,11 @@ import 'package:shair/styled_components/avatar.dart';
 class RestClient {
   final Api _api = Api();
 
-  Future<List<Room>?> getRooms(Device device) async {
+  Future<Either<Failure, List<Room>>> getRooms(Device device) async {
     final res = await _api.get(device.url);
-    if (res.hasError) return [];
-    if (res.parsedResponse?['app'] != 'shair') return null;
+    if (res.hasError || res.parsedResponse?['app'] != 'shair') {
+      return left(Failure('couldn\'t fetch rooms', res.error));
+    }
 
     final roomsRaw = res.parsedResponse!['rooms'] as List;
 
@@ -27,7 +28,7 @@ class RestClient {
       final room = Room.fromMap(raw, owner: device);
       rooms.add(room);
     }
-    return rooms;
+    return right(rooms);
   }
 
   Future<Either<Failure, JoinedRoom>> askToJoin(
@@ -40,14 +41,14 @@ class RestClient {
     return currentDeviceEither.fold(left, (currentDevice) async {
       final res = await _api.post(
         '${room.owner.url}/room/${room.id}/join',
-        code: code,
+        code: code ?? '---',
         personDetails: config.personDetails
             .copyWith(character: CharacterImage(url: currentDevice.imageUrl)),
         body: {'ip': ip},
       );
 
       //TODO
-      if (res.hasError) return left(Failure('message'));
+      if (res.hasError) return left(Failure('message', res.error));
       final currentUser = RoomUser.formConfig(
         config,
         code: res.parsedResponse!['code'] as String?,
@@ -60,44 +61,17 @@ class RestClient {
     });
   }
 
-  Future<WebSocket?> join(JoinedRoom room) async {
+  Future<Either<Failure, WebSocket>> join(JoinedRoom room) async {
     try {
       final ws = await WebSocket.connect(
           '${room.owner.socketUrl}/room/${room.id}/channel',
           headers: {'code': room.idInRoom});
       room.webSocket = ws;
-      return ws;
-    } catch (e) {
-      debugPrint(e.toString());
-      return null;
+      return right(ws);
+    } on WebSocketException catch (e) {
+      return left(Failure(e.message, e));
     }
   }
-
-  // Future<File?> downloadFileFormRoom(
-  //     DownloadableFile downloadableFile, JoinedRoom room) async {
-  //   final res = await _api.getFile(downloadableFile.url, code: room.idInRoom);
-  //   final dataPath = await path_provider.getApplicationDocumentsDirectory();
-  //   final filePath = path.join(dataPath.path, 'Shair', downloadableFile.name);
-  //   if (res.hasError) return null;
-
-  //   final savedFile = File(filePath);
-  //   final openedFile = await savedFile.create();
-  //   await openedFile.writeAsBytes(res.response!.bodyBytes);
-  //   return openedFile;
-  // }
-  // Future<JoinedRoom> getRoomDetails(JoinedRoom room) async {
-  //   //owned by this device
-  //   if (room.owner == null) return room;
-
-  //   final res = await _api.get(
-  //     '${room.owner!.url}/room/${room.id}',
-  //     code: room.idInRoom,
-  //   );
-  //   if (res.hasError || res.response!.statusCode != 200) {
-  //     throw Exception('couldn\'t access room $room');
-  //   }
-  //   return JoinedRoom.fromMap(res.parsedResponse!);
-  // }
 }
 
 class ApiResponse {
@@ -106,7 +80,7 @@ class ApiResponse {
   bool get hasData => !hasError;
   final Map<String, Object?>? parsedResponse;
   final http.Response? response;
-  final Object? error;
+  final Failure? error;
 
   ApiResponse({this.parsedResponse, this.error, this.response})
       : assert(parsedResponse == null || error == null);
@@ -120,8 +94,8 @@ class Api {
       final data = jsonDecode(response.body);
 
       return ApiResponse(parsedResponse: data, response: response);
-    } catch (e) {
-      return ApiResponse(error: e);
+    } on SocketException catch (e) {
+      return ApiResponse(error: Failure(e.message, e));
     }
   }
 
@@ -155,13 +129,13 @@ class Api {
         },
       );
       if (res.statusCode >= 400) {
-        throw Exception('couldn\'t download file');
+        throw Failure('couldn\'t download file response : $res');
       }
 
       return ApiResponse(parsedResponse: {}, response: res);
-    } catch (e) {
+    } on SocketException catch (e) {
       return ApiResponse(
-        error: e,
+        error: Failure(e.message, e),
       );
     }
   }

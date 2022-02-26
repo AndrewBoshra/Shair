@@ -220,12 +220,33 @@ class RestServer {
     );
   }
 
+  static String roomImageUrl(Device owner, String id) =>
+      owner.url + _roomImageUrl.replaceAll('<id>', id);
+  static const String _roomImageUrl = '/room/<id>/image';
+
+  shelf.Response _getRoomImage(shelf.Request req, String roomId) {
+    final room = _appModel.ownedRoomWithId(roomId);
+    if (room == null || room.roomImage?.path == null) {
+      return AppResponse.notFound({});
+    }
+    final imagePath = room.roomImage!.path!;
+    final mime = lookupMimeType(imagePath);
+    return shelf.Response(
+      200,
+      body: File(imagePath).openRead(),
+      headers: {
+        'content-type': mime ?? 'image/',
+      },
+    );
+  }
+
   RestServer(this._appModel) {
     router = shelf_router.Router();
     _protectedRoutes = ProtectedRoutes(_appModel);
     router
       ..get('/', _getRooms)
       ..get(userImagePath, _getImage)
+      ..get(_roomImageUrl, _getRoomImage)
       ..mount('/room', _protectedRoutes.router);
   }
 

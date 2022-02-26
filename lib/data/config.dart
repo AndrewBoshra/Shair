@@ -48,9 +48,9 @@ class PersonDetails {
     );
   }
 
-  Map<String, Object?> toMap() {
+  Map<String, Object?> toMap([bool localImage = false]) {
     return {
-      _characterStr: character?.url,
+      _characterStr: localImage ? character?.path : character?.url,
       _nameStr: name,
     };
   }
@@ -99,7 +99,7 @@ class Config extends Saveable with ChangeNotifier {
   Map<String, Object?> toMap() {
     return {
       _isFirstTimeStr: _isFirstTime,
-      _personStr: personDetails.toMap(),
+      _personStr: personDetails.toMap(true),
       _themeStr: themeToString(_theme),
       _downloadPathStr: _defaultDownloadPath,
     };
@@ -110,8 +110,9 @@ class Config extends Saveable with ChangeNotifier {
     _isFirstTime = (map[_isFirstTimeStr] as bool?) ?? true;
     _defaultDownloadPath = map[_downloadPathStr] as String?;
     personDetails = PersonDetails.fromMap(
-        (map[_personStr] as Map<String, Object?>?) ?? {},
-        isImageLocal: true);
+      (map[_personStr] as Map<String, Object?>?) ?? {},
+      isImageLocal: true,
+    );
     _theme = themeFromString(map[_themeStr] as String?);
     notifyListeners();
     return this;

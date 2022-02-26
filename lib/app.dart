@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shair/commands/bootstrap.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/data/config.dart';
@@ -24,23 +25,23 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  // @override
-  // void initState() {
-  //   final config = context.read<Config>();
-  //   RootNavigator.popAll();
-  //   if (config.isFirstTime) {
-  //     RootNavigator.toStartScreen();
-  //   } else {
-  //     RootNavigator.toHomeScreen();
-  //   }
-  //   super.initState();
-  // }
+  @override
+  void initState() {
+    BootStrapCommand().execute().then((_) {
+      final config = context.read<Config>();
+      RootNavigator.popAll();
+      if (config.isFirstTime) {
+        RootNavigator.toStartScreen();
+      } else {
+        RootNavigator.toHomeScreen();
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final appTheme = AppTheme.of(context);
-    Config config = Provider.of(context);
-
     return MaterialApp(
       scrollBehavior: MyCustomScrollBehavior(),
       title: 'Shair',
@@ -52,9 +53,7 @@ class _AppState extends State<App> {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: config.isFirstTime
-          ? RootNavigator.startScreen
-          : RootNavigator.homeScreen,
+      initialRoute: RootNavigator.loadingScreen,
       onGenerateRoute: RootNavigator.onGenerateRoute,
     );
   }

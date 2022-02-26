@@ -313,8 +313,8 @@ class _RoomsRadarState extends State<RoomsRadar>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               image: DecorationImage(
-                image: room.roomImage?.image ??
-                    AssetImage(ImageAssets.defaultCharacter),
+                image:
+                    room.roomImage?.image ?? const AssetImage(ImageAssets.logo),
                 fit: BoxFit.cover,
               ),
             ),

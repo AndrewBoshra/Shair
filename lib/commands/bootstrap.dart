@@ -36,7 +36,7 @@ class BootStrapCommand extends ICommand {
   }
 
   @override
-  execute() async {
+  Future<void> execute() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.manageExternalStorage,
       Permission.storage,

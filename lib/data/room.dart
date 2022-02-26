@@ -5,6 +5,7 @@ import 'package:shair/data/config.dart';
 import 'package:shair/services/downloader.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
+import 'package:shair/services/server.dart';
 import 'package:shair/services/socket.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -143,7 +144,7 @@ class Room {
   late String id;
   final String name;
   final bool isLocked;
-  final CharacterImage? roomImage;
+  CharacterImage? roomImage;
 
   /// this is null in case this device is the owner of this room
   Device owner;
@@ -156,6 +157,7 @@ class Room {
     this.roomImage,
   }) {
     this.id = id ?? Generator.uid;
+    roomImage ??= CharacterImage(url: RestServer.roomImageUrl(owner, this.id));
   }
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty;
@@ -165,19 +167,14 @@ class Room {
       'id': id,
       'name': name,
       'isLocked': isLocked,
-      'image': owner.imageUrl,
     };
   }
 
-  factory Room.fromMap(Map<String, dynamic> map,
-      {required Device owner, bool isImageLocal = false}) {
+  factory Room.fromMap(Map<String, dynamic> map, {required Device owner}) {
     return Room(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       isLocked: map['isLocked'] ?? true,
-      roomImage: map['image'] != null
-          ? CharacterImage.fromStr(uri: map['image'], isLocal: isImageLocal)
-          : null,
       owner: owner,
     );
   }
@@ -361,12 +358,8 @@ class OwnedRoom extends JoinedRoom {
   }
 
   void notifyAll(SocketMessage action) async {
-    try {
-      for (final participant in _participants) {
-        participant.webSocket?.sink.add(action.toJson());
-      }
-    } catch (e) {
-      print(e.toString());
+    for (final participant in _participants) {
+      participant.webSocket?.sink.add(action.toJson());
     }
   }
 

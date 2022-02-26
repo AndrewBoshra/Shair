@@ -20,9 +20,8 @@ class RoomPollingCommand extends CancelableCommand {
     final devicesEither = await wifiDevices.devices;
     return devicesEither.fold(left, (devices) async {
       for (final device in devices) {
-        var deviceRooms = await client.getRooms(device);
-        deviceRooms ??= [];
-        _rooms.addAll(deviceRooms);
+        var deviceRoomsEither = await client.getRooms(device);
+        deviceRoomsEither.fold(left, _rooms.addAll);
       }
       return right(_rooms);
     });

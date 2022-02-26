@@ -53,12 +53,17 @@ class WifiNetworkDevices {
   Future<Either<Failure, String>> get _myIp async {
     try {
       final ip = await (NetworkInfo().getWifiIP());
-      if (ip == null) throw Exception('Couldn\'t get device ip');
+      if (ip == null) {
+        throw PlatformException(
+          message: 'Couldn\'t get device ip',
+          code: '5023',
+        );
+      }
       return right(ip.replaceAllMapped(RegExp('[١-٩]'), arabicToEnglish));
-    } on PlatformException {
+    } on PlatformException catch (e) {
       return left(
         Failure(
-            'Network Error please make sure you are connected to a network'),
+            'Network Error please make sure you are connected to a network', e),
       );
     }
   }

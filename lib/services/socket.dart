@@ -294,11 +294,7 @@ class SocketService {
   SocketService() {
     handler = webSocketHandler((WebSocketChannel ws) {
       ws.stream.listen((message) {
-        try {
-          handleMessage(message, ws);
-        } catch (e) {
-          print(e.toString());
-        }
+        handleMessage(message, ws);
       });
     });
   }
