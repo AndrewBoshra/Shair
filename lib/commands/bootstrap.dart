@@ -1,8 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:desktop_window/desktop_window.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shair/app_globals.dart';
@@ -44,10 +41,6 @@ class BootStrapCommand extends ICommand {
 
     if (statuses.values.any((status) => status.isDenied)) {
       throw Exception('Couldn\'t access Storage');
-    }
-    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-      await DesktopWindow.setMinWindowSize(const Size(400, 800));
-      await DesktopWindow.setMaxWindowSize(const Size(600, 1000000));
     }
     AppGlobals.server.start();
     await AppGlobals.config.load();

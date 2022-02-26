@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  desktop_window
+  bitsdojo_window_windows
   network_info_plus_windows
   permission_handler_windows
   url_launcher_windows
