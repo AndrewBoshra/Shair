@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/screens/character_select.dart';
@@ -6,6 +8,7 @@ import 'package:shair/screens/error.dart';
 import 'package:shair/screens/home_screen.dart';
 import 'package:shair/screens/join_room.dart';
 import 'package:shair/screens/loading_screen.dart';
+import 'package:shair/screens/no_network.dart';
 import 'package:shair/screens/room_screen.dart';
 import 'package:shair/screens/start.dart';
 
@@ -33,18 +36,21 @@ abstract class RootNavigator {
         return _materialRoute(const CreateRoomScreen());
       case roomScreen:
         return _materialRoute(RoomScreen(id: settings.arguments as String));
+      case wifiErrorScreen:
+        return _materialRoute(const NetworkErrorScreen());
     }
     return _materialRoute(
         const ErrorScreen(error: 'Oops Some Error Happened '));
   }
 
-  static const String startScreen = '/';
+  static const String startScreen = '/start';
   static const String characterSelectScreen = '/character';
-  static const String homeScreen = '/home';
+  static const String homeScreen = '/';
   static const String loadingScreen = '/loading';
   static const String joinRoomScreen = '/rooms';
   static const String createRoomScreen = '/create-room';
   static const String roomScreen = '/room';
+  static const String wifiErrorScreen = '/wifi-error';
 
   static Future<T?>? _goTo<T, Tout>(String route,
       {bool pop = false, Object? args, Tout? out}) {
@@ -70,6 +76,10 @@ abstract class RootNavigator {
     nav?.popUntil((route) => false);
   }
 
+  static void pop<T>([T? result]) {
+    nav?.pop(result);
+  }
+
   static Future<T?>? toStartScreen<T>() {
     return _goTo(startScreen);
   }
@@ -84,5 +94,12 @@ abstract class RootNavigator {
 
   static Future<T?>? toRoomScreen<T>(Room room, {bool pop = false}) async {
     return _goTo(roomScreen, pop: pop, args: room.id);
+  }
+
+  static Future<T?>? toWifiErrorScreen<T>({bool pop = false}) async {
+    return _goTo(
+      wifiErrorScreen,
+      pop: pop,
+    );
   }
 }

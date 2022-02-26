@@ -28,8 +28,10 @@ abstract class SocketMessage extends ICommand {
     if (room.isOwned) {
       final _room = room as OwnedRoom;
       ownerExecute(_room);
+      print('execute ${toMap()}  as Owner');
     } else {
       joinedExecute(room);
+      print('execute ${toMap()}  as joined');
       if (notifyHost) {
         room.sendToHost(this);
       }

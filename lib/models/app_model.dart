@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/actions/abstract.dart';
 import 'package:shair/commands/room_polling.dart';
+import 'package:shair/core/failures.dart';
 import 'package:shair/data/room.dart';
 
 ///class Containing general app state
 ///
 class AppModel extends ChangeNotifier {
-  Set<Room> _availableRooms = {};
+  Either<Failure, Set<Room>> _availableRooms = right({});
   final Set<OwnedRoom> _myRooms = {};
   final Set<JoinedRoom> _joinedRooms = {};
 
@@ -35,8 +37,8 @@ class AppModel extends ChangeNotifier {
   Sink<IActionResponse> get responseSink => _responseSController.sink;
 
   ///available Rooms
-  UnmodifiableSetView<Room> get availableRooms =>
-      UnmodifiableSetView(_availableRooms);
+  Either<Failure, UnmodifiableSetView<Room>> get availableRooms =>
+      _availableRooms.fold(left, (r) => right(UnmodifiableSetView(r)));
 
   UnmodifiableSetView<OwnedRoom> get myRooms => UnmodifiableSetView(_myRooms);
 
@@ -45,7 +47,7 @@ class AppModel extends ChangeNotifier {
 
   Set<JoinedRoom> get accessibleRooms => {...joinedRooms, ..._myRooms};
 
-  set availableRooms(Set<Room> rooms) {
+  set availableRooms(Either<Failure, Set<Room>> rooms) {
     _availableRooms = rooms;
     notifyListeners();
   }

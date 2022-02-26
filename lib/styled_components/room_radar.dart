@@ -10,6 +10,7 @@ import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/assets.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
+import 'package:shair/root_nav.dart';
 
 const _kBallRadius = 40.0;
 const _kFriction = 6;
@@ -365,9 +366,23 @@ class _RoomsRadarState extends State<RoomsRadar>
     super.initState();
     _appModel = context.read<AppModel>();
     RoomPollingCommand().execute();
+    bool _isInErrorState = false;
     _appModel.addListener(() {
-      _generateBalls(_appModel.availableRooms);
+      _appModel.availableRooms.fold(
+        (f) async {
+          //error
+          _appModel.cancelRoomPolling();
+          if (!_isInErrorState) {
+            _isInErrorState = true;
+            await RootNavigator.toWifiErrorScreen();
+            RoomPollingCommand().execute();
+            _isInErrorState = false;
+          }
+        },
+        _generateBalls,
+      );
     });
+
     _physicsSim._ticker = createTicker(_physicsSim.update);
     _physicsSim.start();
     _physicsSim.addListener(() => setState(() {}));

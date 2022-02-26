@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dartz/dartz.dart';
+import 'package:flutter/services.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:shair/core/failures.dart';
 import 'package:shair/services/server.dart';
 import 'package:shair/utils/utils.dart';
 
@@ -44,35 +47,39 @@ class Device {
   }
 }
 
-abstract class NetworkDevices {
-  Future<List<Device>> get devices;
-  Future<Device> get currentDevice;
-}
-
-class WifiNetworkDevices implements NetworkDevices {
+class WifiNetworkDevices {
   final Set<Device> _devices = {};
-  Future<String> get _myIp async {
-    final ip = await (NetworkInfo().getWifiIP());
-    if (ip == null) throw Exception('Couldn\'t get device ip');
-    return ip.replaceAllMapped(RegExp('[١-٩]'), arabicToEnglish);
+
+  Future<Either<Failure, String>> get _myIp async {
+    try {
+      final ip = await (NetworkInfo().getWifiIP());
+      if (ip == null) throw Exception('Couldn\'t get device ip');
+      return right(ip.replaceAllMapped(RegExp('[١-٩]'), arabicToEnglish));
+    } on PlatformException {
+      return left(
+        Failure(
+            'Network Error please make sure you are connected to a network'),
+      );
+    }
   }
 
-  @override
-  Future<List<Device>> get devices async {
-    String? ip = await _myIp;
-    final String subnet = ip.substring(0, ip.lastIndexOf('.'));
-    final stream = HostScanner.discover(subnet,
-        firstSubnet: 1, lastSubnet: 50, progressCallback: (progress) {});
+  Future<Either<Failure, List<Device>>> get devices async {
+    final ipEither = await _myIp;
+    return ipEither.fold(left, (ip) async {
+      final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+      final stream = HostScanner.discover(subnet,
+          firstSubnet: 1, lastSubnet: 50, progressCallback: (progress) {});
 
-    final hosts = await stream.toList();
-    _devices.addAll(hosts.map((host) => Device(host.ip)));
-    // _devices.add(Device(ip));
-    return _devices.where((device) => device.ip != ip).toList();
+      final hosts = await stream.toList();
+      _devices.addAll(hosts.map((host) => Device(host.ip)));
+      // _devices.add(Device(ip));
+      final devices = _devices.where((device) => device.ip != ip).toList();
+      return right(devices);
+    });
   }
 
-  @override
-  Future<Device> get currentDevice async {
+  Future<Either<Failure, Device>> get currentDevice async {
     final ip = await _myIp;
-    return Device(ip);
+    return ip.fold(left, (ip) => right(Device(ip)));
   }
 }

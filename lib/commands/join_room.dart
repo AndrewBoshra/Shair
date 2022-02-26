@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shair/commands/abstract_command.dart';
@@ -7,6 +8,7 @@ import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/dialogs/snackbars.dart';
 import 'package:shair/root_nav.dart';
 import 'package:shair/services/generator.dart';
+import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/server.dart';
 import 'package:shair/services/socket.dart';
 
@@ -24,32 +26,34 @@ class JoinRoomCommand extends ICommand {
       idInRoom = Generator.userId;
       Dialogs.showJoinCodeDialog(context, idInRoom);
     }
-    final device = await wifiDevices.currentDevice;
-    final joinRes = await client.askToJoin(room, config, idInRoom, device.ip);
 
-    if (joinRes == null) {
-      SnackBars.show(
-        context,
-        SnackBars.error(
-            context, 'Your Request to join ${room.name} was rejected'),
-      );
-    } else {
-      final ws = await client.join(joinRes);
-      if (ws == null) return;
-      joinRes.webSocket = ws;
-      ws.listen((event) {
-        server.socketService.handleMessage(event);
+    final deviceEither = await wifiDevices.currentDevice;
+
+    deviceEither.fold(left, (device) async {
+      final askRes = await client.askToJoin(room, config, idInRoom, device.ip);
+      await askRes.fold((f) {
+        SnackBars.show(
+          context,
+          SnackBars.error(
+              context, 'Your Request to join ${room.name} was rejected'),
+        );
+      }, (room) async {
+        final ws = await client.join(room);
+        if (ws == null) return;
+        room.webSocket = ws;
+        ws.listen((event) {
+          server.socketService.handleMessage(event);
+        });
+        InitSocketMessage.formConfig(
+          config,
+          room,
+          true,
+          device.url + RestServer.userImagePath,
+        ).execute();
+        appModel.addRoomToJoinedRooms(room);
+        appModel.cancelRoomPolling();
+        RootNavigator.toRoomScreen(room, pop: true);
       });
-      final currentDevice = await wifiDevices.currentDevice;
-      InitSocketMessage.formConfig(
-        config,
-        joinRes,
-        true,
-        currentDevice.url + RestServer.userImagePath,
-      ).execute();
-      appModel.addRoomToJoinedRooms(joinRes);
-      appModel.cancelRoomPolling();
-      RootNavigator.toRoomScreen(joinRes, pop: true);
-    }
+    });
   }
 }

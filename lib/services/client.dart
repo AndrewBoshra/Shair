@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shair/app_globals.dart';
+import 'package:shair/core/failures.dart';
 import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
@@ -28,32 +30,34 @@ class RestClient {
     return rooms;
   }
 
-  Future<JoinedRoom?> askToJoin(
+  Future<Either<Failure, JoinedRoom>> askToJoin(
     Room room,
     Config config,
     String? code,
     String ip,
   ) async {
-    final currentDevice = await AppGlobals.wifiDevices.currentDevice;
+    final currentDeviceEither = await AppGlobals.wifiDevices.currentDevice;
+    return currentDeviceEither.fold(left, (currentDevice) async {
+      final res = await _api.post(
+        '${room.owner.url}/room/${room.id}/join',
+        code: code,
+        personDetails: config.personDetails
+            .copyWith(character: CharacterImage(url: currentDevice.imageUrl)),
+        body: {'ip': ip},
+      );
 
-    final res = await _api.post(
-      '${room.owner.url}/room/${room.id}/join',
-      code: code,
-      personDetails: config.personDetails
-          .copyWith(character: CharacterImage(url: currentDevice.imageUrl)),
-      body: {'ip': ip},
-    );
-
-    if (res.hasError) return null;
-    final currentUser = RoomUser.formConfig(
-      config,
-      code: res.parsedResponse!['code'] as String?,
-    );
-    return JoinedRoom.fromMap(
-      res.parsedResponse!,
-      currentUser,
-      owner: room.owner,
-    );
+      //TODO
+      if (res.hasError) return left(Failure('message'));
+      final currentUser = RoomUser.formConfig(
+        config,
+        code: res.parsedResponse!['code'] as String?,
+      );
+      return right(JoinedRoom.fromMap(
+        res.parsedResponse!,
+        currentUser,
+        owner: room.owner,
+      ));
+    });
   }
 
   Future<WebSocket?> join(JoinedRoom room) async {

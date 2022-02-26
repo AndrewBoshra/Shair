@@ -48,7 +48,7 @@ class Downloader {
   File? get downloadedFile => _downloadedFile;
 
   int _parseSize(Map<String, String?> headers) {
-    return int.parse(headers['content-length'] ?? '-1');
+    return int.parse(headers['content-range']!.split('/').last.trim());
   }
 
   String _parseFileName(Map<String, String?> headers) {
@@ -95,6 +95,7 @@ class Downloader {
     }
 
     _size = _parseSize(resStream.headers);
+    print('size $_size');
     String fileName = _parseFileName(resStream.headers);
 
     _downloadedFile = File(path.join(downloadPath, fileName));
