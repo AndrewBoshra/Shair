@@ -67,10 +67,10 @@ class Downloader {
     );
   }
 
-  void _updateState(DownloadState state) {
-    if (_downloadStreamSubscription == null || state == _state) return;
-    _state = state;
-    _stateSink.add(state);
+  void _updateState(DownloadState newState) {
+    if (newState == _state) return;
+    _state = newState;
+    _stateSink.add(newState);
   }
 
   void _handleIncomingData(List<int> data) {
@@ -94,6 +94,8 @@ class Downloader {
     if (resStream.statusCode >= 400) {
       return false;
     }
+
+    _updateState(DownloadState.downloading);
 
     _size = _parseSize(resStream.headers);
     String fileName = _parseFileName(resStream.headers);
@@ -123,21 +125,19 @@ class Downloader {
         debugPrint(e.toString());
       },
     );
-    _updateState(DownloadState.downloading);
 
     await for (final state in stateStream) {
       if (state == DownloadState.finished) {
         break;
       } else if (state == DownloadState.stopped) {
-        _downloadedFileSink?.flush();
+        ///no need to flush when the user already canceled it.
+        if (!_canceledByUser) {
+          _downloadedFileSink?.flush();
+        }
         break;
       }
     }
 
-    ///no need to flush when the user already canceled it.
-    if (!_canceledByUser) {
-      await _downloadedFileSink?.flush();
-    }
     await _downloadedFileSink?.close();
     return true;
   }

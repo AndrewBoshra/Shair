@@ -39,6 +39,7 @@ dependencies:
   liquid_progress_indicator: ^0.4.0
   lottie: ^1.2.1
   mime: ^1.0.1
+  multiple_stream_builder: ^2.0.0
   network_info_plus: ^2.1.2
   network_tools: ^1.0.8
   path_provider: ^2.0.8

@@ -8,6 +8,7 @@ import 'package:shair/services/downloader.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/utils/extensions.dart';
+import 'package:multiple_stream_builder/multiple_stream_builder.dart';
 
 const _kBorderRadius = 20.0;
 const _r = Radius.circular(_kBorderRadius);
@@ -75,7 +76,7 @@ class SharedFileTile extends StatelessWidget {
     final downloadData = Padding(
         padding: const EdgeInsets.symmetric(horizontal: Spacers.kPaddingSmall),
         child: _buildTileAction(appTheme, textTheme, fileData));
-
+    print('${downloader?.downloadableFile.name} State is ${downloader?.state}');
     switch (downloader?.state) {
       case DownloadState.finished:
         return _buildFileBase(
@@ -105,7 +106,7 @@ class SharedFileTile extends StatelessWidget {
                   ),
                 if (progress < 100)
                   Expanded(
-                    child: ColoredBox(color: appTheme.secondaryVarColor),
+                    child: ColoredBox(color: Colors.red),
                     flex: 100 - progress,
                   ),
               ],
@@ -189,26 +190,19 @@ class SharedFileTile extends StatelessWidget {
     } else if (!sharedFile.isDownloading) {
       child = _buildFile(appTheme, fileData);
     } else {
-      child = StreamBuilder<int>(
-        initialData: 0,
-        stream: downloader!.progressStream,
+      child = StreamBuilder2<DownloadState, int>(
+        streams: Tuple2(downloader!.stateStream, downloader!.progressStream),
+        initialData: const Tuple2(DownloadState.stopped, 0),
         builder: (context, snapshot) {
           return _buildProgressBar(
-              appTheme, textTheme, snapshot.data!, fileData);
+              appTheme, textTheme, snapshot.item2.data!, fileData);
         },
       );
     }
 
-    child = ClipRRect(
-      borderRadius: isOwned ? _kSenderBorder : _kSenderBorder.flipped(),
-      child: StreamBuilder<DownloadState>(
-        stream: downloader?.stateStream,
-        builder: (context, snapshot) {
-          return child;
-        },
-      ),
-    );
-
+    final bar = ClipRRect(
+        borderRadius: isOwned ? _kSenderBorder : _kSenderBorder.flipped(),
+        child: child);
     final ownerData = [
       Text(
         file.owner?.name ?? '',
@@ -222,7 +216,7 @@ class SharedFileTile extends StatelessWidget {
       children: [
         SizedBox(
           height: 50,
-          child: child,
+          child: bar,
         ),
         const SizedBox(height: 2),
         Row(
