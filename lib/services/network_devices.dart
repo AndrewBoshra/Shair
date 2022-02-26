@@ -67,8 +67,7 @@ class WifiNetworkDevices implements NetworkDevices {
     final hosts = await stream.toList();
     _devices.addAll(hosts.map((host) => Device(host.ip)));
     // _devices.add(Device(ip));
-    //TODO remove current device ip from hosts
-    return _devices.toList();
+    return _devices.where((device) => device.ip != ip).toList();
   }
 
   @override

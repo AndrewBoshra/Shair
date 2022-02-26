@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:shair/actions/actions.dart';
 import 'package:shair/data/app_theme.dart';
-import 'package:shair/data/config.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';

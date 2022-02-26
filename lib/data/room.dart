@@ -5,7 +5,6 @@ import 'package:shair/data/config.dart';
 import 'package:shair/services/downloader.dart';
 import 'package:shair/services/generator.dart';
 import 'package:shair/services/network_devices.dart';
-import 'package:shair/services/server.dart';
 import 'package:shair/services/socket.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -270,7 +269,7 @@ class JoinedRoom extends Room {
     return room;
   }
 
-  Set<RoomUser> _participants = {};
+  final Set<RoomUser> _participants = {};
 
   UnmodifiableSetView<RoomUser> get participants =>
       UnmodifiableSetView<RoomUser>(_participants);

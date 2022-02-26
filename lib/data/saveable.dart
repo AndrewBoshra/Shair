@@ -59,7 +59,7 @@ abstract class Saveable {
   }
 
   Map<String, Object?> toMap();
-  Saveable readFromMap(Map<String, Object?> json);
+  Saveable readFromMap(Map<String, Object?> map);
 
   late UniversalFile file;
 

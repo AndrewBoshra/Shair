@@ -8,8 +8,6 @@ import 'package:shair/data/config.dart';
 
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
-import 'package:path/path.dart' as path;
 import 'package:shair/styled_components/avatar.dart';
 
 class RestClient {
