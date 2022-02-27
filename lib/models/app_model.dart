@@ -8,6 +8,7 @@ import 'package:shair/actions/abstract.dart';
 import 'package:shair/commands/room_polling.dart';
 import 'package:shair/core/failures.dart';
 import 'package:shair/data/room.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 ///class Containing general app state
 ///
@@ -62,6 +63,11 @@ class AppModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeFromJoinedRooms(JoinedRoom room) {
+    _joinedRooms.remove(room);
+    notifyListeners();
+  }
+
   /// Room Polling
   RoomPollingCommand? _currentPollCommand;
   set currentPollCommand(RoomPollingCommand command) {
@@ -82,6 +88,12 @@ class AppModel extends ChangeNotifier {
   OwnedRoom? ownedRoomWithId(String id) {
     final rooms = myRooms.where((room) => room.id == id);
     return rooms.isNotEmpty ? rooms.first : null;
+  }
+
+  List<JoinedRoom> joinedRoomWithWebSocket(WebSocketChannel ws) {
+    return accessibleRooms
+        .where((room) => room.userWithWebSocket(ws) != null)
+        .toList();
   }
 
   static AppModel of(BuildContext c, {bool listen = true}) =>

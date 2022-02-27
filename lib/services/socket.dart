@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:shair/app_globals.dart';
+import 'package:shair/commands/leave_room.dart';
+import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/config.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
@@ -141,120 +144,16 @@ abstract class ActionMessage extends SocketMessage {
   }
 }
 
-class ShareFileMessage extends ActionMessage {
-  final String fileUrl;
-  final String fileId;
-  final int? size;
-  final String name;
-  final String? path;
-  final String? fileOwnerCode;
-
-  ShareFileMessage({
-    required JoinedRoom room,
-    required this.name,
-    required this.fileUrl,
-    required this.fileId,
-    required this.size,
-    required this.fileOwnerCode,
-    required WebSocketChannel? senderWebSocket,
-    this.path,
-    bool notifyHost = false,
-  }) : super(room, senderWebSocket, notifyHost);
-
-  factory ShareFileMessage.fromDownloadableFile(
-    DownloadableFile file,
-    JoinedRoom room, {
-    WebSocketChannel? webSocket,
-    bool notifyHost = false,
-  }) {
-    return ShareFileMessage(
-      room: room,
-      fileUrl: file.url,
-      fileId: file.id,
-      name: file.name,
-      size: file.size,
-      path: file.path,
-      senderWebSocket: webSocket,
-      notifyHost: notifyHost,
-      fileOwnerCode: file.owner?.code,
-    );
-  }
-  @override
-  ownerExecute(OwnedRoom room) {
-    // check if this user can send this file
-    final canSend =
-        room.participants.any((user) => user.webSocket == senderWebSocket);
-
-    if (canSend || senderWebSocket == null) {
-      //if this request is from any user or the host himself
-      joinedExecute(room);
-    }
-    room.notifyAll(this);
-  }
-
-  @override
-  joinedExecute(JoinedRoom room) {
-    if (senderWebSocket != null && fileOwnerCode == null) {
-      debugPrint('file sender is not in this room');
-      return;
-    }
-    final user = fileOwnerCode != null
-        ? room.userWithCode(fileOwnerCode!)
-        : room.currentUser;
-    room.addFile(
-      SharedFile(
-        file: DownloadableFile(
-          id: fileId,
-          name: name,
-          url: fileUrl,
-          size: size,
-          owner: user,
-          path: path,
-        ),
-      ),
-    );
-  }
-
-  factory ShareFileMessage.fromMap(
-      Map<String, dynamic> map, WebSocketChannel? webSocket) {
-    final roomId = map['roomId'] as String?;
-    final room = ICommand.sAppModel.accessibleRoomWithId(roomId ?? '');
-    if (room == null) {
-      throw Exception('$roomId is Invalid Room id and was sent to socket');
-    }
-    return ShareFileMessage(
-      room: room,
-      fileUrl: map['fileUrl'] ?? '',
-      size: map['size']?.toInt() ?? 0,
-      senderWebSocket: webSocket,
-      fileId: map['fileId'],
-      name: map['name'],
-      fileOwnerCode: map['fileOwnerCode'],
-    );
-  }
-
-  @override
-  String get actionType => 'send-file';
-
-  @override
-  Map<String, dynamic> toMapImpl() {
-    return {
-      'roomId': room.id,
-      'fileUrl': fileUrl,
-      'size': size,
-      'fileId': fileId,
-      'name': name,
-      'fileOwnerCode': fileOwnerCode,
-    };
-  }
-}
-
 class ActionMessageFactory {
   ActionMessage? fromMap(
       Map<String, Object?> map, WebSocketChannel? webSocket) {
     switch (map['type']) {
-      case 'send-file':
+      case ShareFileMessage.kActionType:
         return ShareFileMessage.fromMap(map, webSocket);
+      case UserLeftRoomMessage.kActionType:
+        assert(
+            webSocket != null, 'websocket must not be null to leave the room');
+        return UserLeftRoomMessage.fromMap(map, webSocket!);
       default:
         return null;
     }
@@ -290,10 +189,15 @@ class SocketService {
   }
 
   SocketService() {
-    handler = webSocketHandler((WebSocketChannel ws) {
+    handler = webSocketHandler((WebSocketChannel ws) async {
       ws.stream.listen((message) {
         handleMessage(message, ws);
       });
+      await ws.sink.done;
+      final rooms = AppGlobals.appModel.joinedRoomWithWebSocket(ws);
+      for (final room in rooms) {
+        UserLeftRoomMessage(room, ws).execute();
+      }
     });
   }
 }

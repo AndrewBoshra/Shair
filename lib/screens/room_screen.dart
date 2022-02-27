@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/leave_room.dart';
 
 import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/app_theme.dart';
@@ -37,6 +38,16 @@ class RoomScreen extends StatelessWidget {
             Text(room.name)
           ],
         ),
+        actions: [
+          if (!room.isOwned)
+            IconButton(
+              onPressed: () => LeaveRoomCommand(room, context).execute(),
+              icon: Icon(
+                Icons.close,
+                color: appTheme.onPrimaryColor,
+              ),
+            )
+        ],
       ),
       backgroundColor: appTheme.backgroundColor,
       body: Padding(

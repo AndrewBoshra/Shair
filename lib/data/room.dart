@@ -138,6 +138,8 @@ class SharedFile {
   /// true if this file is being downloaded or paused.
   /// false if the download never started before of stopped.
   bool get isDownloading => downloader != null;
+
+  RoomUser? get owner => file.owner;
 }
 
 class Room {
@@ -276,6 +278,13 @@ class JoinedRoom extends Room {
     return _participants.firstWhere((u) => u.code == code);
   }
 
+  RoomUser? userWithWebSocket(WebSocketChannel ws) {
+    bool check(RoomUser u) => u.webSocket == ws;
+
+    if (!_participants.any(check)) return null;
+    return _participants.firstWhere(check);
+  }
+
   Iterable<SharedFile> userFiles(RoomUser user) {
     return files.where((f) => f.file.owner == user);
   }
@@ -311,6 +320,10 @@ class JoinedRoom extends Room {
     webSocket!.add(message.toJson());
   }
 
+  Future<void> leave() async {
+    await webSocket?.close();
+  }
+
   ///////////////////////
   //       Getters     //
   ///////////////////////
@@ -319,6 +332,11 @@ class JoinedRoom extends Room {
       UnmodifiableSetView<SharedFile>(_files);
   bool addFile(SharedFile file) {
     return _files.add(file);
+  }
+
+  void removeParticipantWithWebSocket(WebSocketChannel ws) {
+    _files.removeWhere((sFile) => sFile.owner?.webSocket == ws);
+    _participants.removeWhere((user) => user.webSocket == ws);
   }
 }
 

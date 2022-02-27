@@ -44,7 +44,7 @@ class Downloader {
         _downloadedSize = startByte,
         _downloadedFile = downloadedFile;
 
-  int get percentage => (100 * _downloadedSize / _size).round();
+  int get percentage => (100 * _downloadedSize / _size).round().clamp(0, 100);
   DownloadState get state => _state;
   File? get downloadedFile => _downloadedFile;
 
