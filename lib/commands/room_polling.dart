@@ -17,9 +17,9 @@ class RoomPollingCommand extends CancelableCommand {
   Future<Either<Failure, Set<Room>>> _fetchRooms() async {
     var _rooms = <Room>{};
 
-    final devicesEither = await wifiDevices.devices;
+    final devicesEither = await wifiDevices.devicesStream;
     return devicesEither.fold(left, (devices) async {
-      for (final device in devices) {
+      await for (final device in devices) {
         var deviceRoomsEither = await client.getRooms(device);
         deviceRoomsEither.fold(left, _rooms.addAll);
       }
@@ -36,8 +36,11 @@ class RoomPollingCommand extends CancelableCommand {
     appModel.availableRooms = await _fetchRooms();
 
     Future.doWhile(() async {
-      await Future.delayed(_kCoolUpDuration);
-      appModel.availableRooms = await _fetchRooms();
+      final rooms = _fetchRooms();
+      final futures =
+          await Future.wait([rooms, Future.delayed(_kCoolUpDuration)]);
+
+      appModel.availableRooms = futures.first;
       debugPrint('finished _fetchRooms');
       return _isPollingRooms;
     });

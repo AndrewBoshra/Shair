@@ -68,18 +68,34 @@ class WifiNetworkDevices {
     }
   }
 
-  Future<Either<Failure, List<Device>>> get devices async {
+  Future<Either<Failure, Stream<ActiveHost>>> get _hostStream async {
     final ipEither = await _myIp;
     return ipEither.fold(left, (ip) async {
       final String subnet = ip.substring(0, ip.lastIndexOf('.'));
-      final stream = HostScanner.discover(subnet,
-          firstSubnet: 1, lastSubnet: 50, progressCallback: (progress) {});
+      final myIpLast = int.parse(ip.split('.').last);
+      final searchStart = myIpLast - 25;
+      final searchEnd = myIpLast + 25;
+      final stream = HostScanner.discover(
+        subnet,
+        firstSubnet: searchStart.clamp(1, 255),
+        lastSubnet: searchEnd.clamp(1, 255),
+        progressCallback: (progress) {},
+      );
+      return right(stream.where((host) => host.ip != ip));
+    });
+  }
 
-      final hosts = await stream.toList();
-      _devices.addAll(hosts.map((host) => Device(host.ip)));
-      // _devices.add(Device(ip));
-      final devices = _devices.where((device) => device.ip != ip).toList();
-      return right(devices);
+  Future<Either<Failure, Stream<Device>>> get devicesStream async {
+    final hostStream = await _hostStream;
+    return hostStream.fold(left, (hostStream) {
+      return right(hostStream.map((host) => Device(host.ip)));
+    });
+  }
+
+  Future<Either<Failure, List<Device>>> get devices async {
+    final dStream = await devicesStream;
+    return dStream.fold(left, (stream) async {
+      return right(await stream.toList());
     });
   }
 
