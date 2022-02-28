@@ -7,10 +7,12 @@ abstract class StyledElevatedButton {
     BuildContext context, {
     required VoidCallback onPressed,
     required String text,
+    int? maxLines,
   }) {
     final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
+      maxLines: maxLines,
       onPressed: onPressed,
       text: text,
       textColor: appTheme.onPrimaryButtonTextColor,
@@ -22,10 +24,12 @@ abstract class StyledElevatedButton {
     BuildContext context, {
     required VoidCallback onPressed,
     required String text,
+    int? maxLines,
   }) {
     final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
+      maxLines: maxLines,
       onPressed: onPressed,
       text: text,
       textColor: appTheme.onPrimaryButtonColor,
@@ -37,10 +41,12 @@ abstract class StyledElevatedButton {
     BuildContext context, {
     required VoidCallback onPressed,
     required String text,
+    int? maxLines,
   }) {
     final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
+      maxLines: maxLines,
       onPressed: onPressed,
       text: text,
       textColor: appTheme.onSecondaryColor,
@@ -52,10 +58,12 @@ abstract class StyledElevatedButton {
     BuildContext context, {
     required VoidCallback onPressed,
     required String text,
+    int? maxLines,
   }) {
     final appTheme = AppTheme.of(context);
 
     return _StyledElevatedButton(
+      maxLines: maxLines,
       onPressed: onPressed,
       text: text,
       textColor: appTheme.onErrorColor,
@@ -71,12 +79,14 @@ class _StyledElevatedButton extends StatelessWidget {
     required this.text,
     required this.textColor,
     required this.color,
+    this.maxLines,
   }) : super(key: key);
 
   final VoidCallback onPressed;
   final String text;
   final Color textColor;
   final Color color;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +99,7 @@ class _StyledElevatedButton extends StatelessWidget {
       onPressed: onPressed,
       child: Text(
         text,
+        maxLines: maxLines,
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: textColor,

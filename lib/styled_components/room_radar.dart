@@ -297,30 +297,11 @@ class _RoomsRadarState extends State<RoomsRadar>
 
   Widget _buildBall(Ball ball) {
     final room = ball.data as Room;
-    return Positioned(
-      left: ball.x - ball.radius,
-      top: ball.y - ball.radius,
-      child: GestureDetector(
-        onPanUpdate: (d) => _physicsSim._onBallPanUpdate(ball, d),
-        onPanStart: (d) {
-          ball.lastTimeUpdate = d.sourceTimeStamp;
-        },
-        onTap: () => JoinRoomCommand(context, room).execute(),
-        child: SizedBox(
-          width: ball.radius * 2,
-          height: ball.radius * 2,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image:
-                    room.roomImage?.image ?? const AssetImage(ImageAssets.logo),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return BallWidget(
+      physicsSim: _physicsSim,
+      context: context,
+      room: room,
+      ball: ball,
     );
   }
 
@@ -408,6 +389,77 @@ class _RoomsRadarState extends State<RoomsRadar>
           ],
         );
       },
+    );
+  }
+}
+
+class BallWidget extends StatefulWidget {
+  const BallWidget({
+    Key? key,
+    required PhysicsSim physicsSim,
+    required this.context,
+    required this.room,
+    required this.ball,
+  })  : _physicsSim = physicsSim,
+        super(key: key);
+
+  final PhysicsSim _physicsSim;
+  final BuildContext context;
+  final Room room;
+  final Ball ball;
+
+  @override
+  State<BallWidget> createState() => _BallWidgetState();
+}
+
+class _BallWidgetState extends State<BallWidget>
+    with SingleTickerProviderStateMixin {
+  late final _animationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2000));
+  late final _animation =
+      CurvedAnimation(parent: _animationController, curve: Curves.bounceIn);
+  @override
+  void initState() {
+    _animationController.forward();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final radius = _animation.value * widget.ball.radius;
+        final x = widget.ball.x - radius;
+        final y = widget.ball.y - radius;
+        return Positioned(
+          left: x,
+          top: y,
+          child: GestureDetector(
+            onPanUpdate: (d) =>
+                widget._physicsSim._onBallPanUpdate(widget.ball, d),
+            onPanStart: (d) {
+              widget.ball.lastTimeUpdate = d.sourceTimeStamp;
+            },
+            onTap: () => JoinRoomCommand(context, widget.room).execute(),
+            child: SizedBox(
+              width: radius * 2,
+              height: radius * 2,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: widget.room.roomImage?.image ??
+                const AssetImage(ImageAssets.logo),
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -12,7 +12,7 @@ class CreateRoomCommand extends ICommand {
   final String name;
   final String? image;
   final bool isLocked;
-  Future<Either<Failure, OwnedRoom>> _createRoom(device) async {
+  Future<Either<Failure, OwnedRoom>> _createRoom(Device device) async {
     final room = OwnedRoom(
       name: name,
       isLocked: isLocked,
@@ -32,12 +32,8 @@ class CreateRoomCommand extends ICommand {
   @override
   Future<Either<Failure, OwnedRoom>> execute() async {
     var device = await wifiDevices.currentDevice;
-    return device.fold(
-      (f) {
-        RootNavigator.toWifiErrorScreen();
-        return left(f);
-      },
-      _createRoom,
-    );
+
+    ///we will create room in both cases so that it works with hotSpot devices
+    return device.fold((l) => _createRoom(Device('0.0.0.0')), _createRoom);
   }
 }

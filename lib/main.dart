@@ -14,6 +14,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: AppGlobals.config),
         ChangeNotifierProvider.value(value: AppGlobals.appModel),
+        Provider.value(value: AppGlobals.wifiDevices),
         ChangeNotifierProvider.value(value: lightTheme),
       ],
       child: const App(),

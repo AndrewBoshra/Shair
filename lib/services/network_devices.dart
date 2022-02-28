@@ -48,8 +48,8 @@ class Device {
 }
 
 class WifiNetworkDevices {
-  final Set<Device> _devices = {};
-
+  // final Set<Device> _devices = {};
+  Future<bool> get canCreateRoom async => (await _myIp).isRight();
   Future<Either<Failure, String>> get _myIp async {
     try {
       final ip = await (NetworkInfo().getWifiIP());
@@ -73,8 +73,8 @@ class WifiNetworkDevices {
     return ipEither.fold(left, (ip) async {
       final String subnet = ip.substring(0, ip.lastIndexOf('.'));
       final myIpLast = int.parse(ip.split('.').last);
-      final searchStart = myIpLast - 25;
-      final searchEnd = myIpLast + 25;
+      final searchStart = myIpLast - 255;
+      final searchEnd = myIpLast + 255;
       final stream = HostScanner.discover(
         subnet,
         firstSubnet: searchStart.clamp(1, 255),
@@ -88,7 +88,8 @@ class WifiNetworkDevices {
   Future<Either<Failure, Stream<Device>>> get devicesStream async {
     final hostStream = await _hostStream;
     return hostStream.fold(left, (hostStream) {
-      return right(hostStream.map((host) => Device(host.ip)));
+      final devicesStream = hostStream.map((host) => Device(host.ip));
+      return right(devicesStream);
     });
   }
 

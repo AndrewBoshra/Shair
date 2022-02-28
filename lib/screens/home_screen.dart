@@ -5,12 +5,35 @@ import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/services/network_devices.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _btnAnimation;
+  @override
+  void initState() {
+    final devices = context.read<WifiNetworkDevices>();
+    devices.canCreateRoom.then((value) => setState(() {
+          if (!value) _animationController.reverse();
+        }));
+
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1000), value: 1);
+    _btnAnimation =
+        CurvedAnimation(parent: _animationController, curve: Curves.bounceOut);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,29 +181,35 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Spacer(),
-        Expanded(
-          flex: 2,
-          child: StyledElevatedButton.secondary(
-            context,
-            onPressed: RootNavigator.toJoinRoomScreen,
-            text: 'Join',
+    return AnimatedBuilder(
+      animation: _btnAnimation,
+      builder: (context, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(flex: 50),
+          if (!_animationController.isDismissed) ...[
+            Expanded(
+              flex: (100 * _btnAnimation.value).toInt(),
+              child: StyledElevatedButton.secondary(
+                context,
+                onPressed: RootNavigator.toJoinRoomScreen,
+                text: 'Join',
+                maxLines: 1,
+              ),
+            ),
+            Spacers.mediumSpacerHz(),
+          ],
+          Expanded(
+            flex: 100,
+            child: StyledElevatedButton.secondary(
+              context,
+              onPressed: RootNavigator.toCreateRoomScreen,
+              text: 'New Room',
+            ),
           ),
-        ),
-        Spacers.mediumSpacerHz(),
-        Expanded(
-          flex: 2,
-          child: StyledElevatedButton.secondary(
-            context,
-            onPressed: RootNavigator.toCreateRoomScreen,
-            text: 'New Room',
-          ),
-        ),
-        const Spacer(),
-      ],
+          const Spacer(flex: 50),
+        ],
+      ),
     );
   }
 }

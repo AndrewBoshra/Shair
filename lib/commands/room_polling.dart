@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
 import 'package:shair/core/failures.dart';
 import 'package:shair/data/room.dart';
+import 'package:shair/services/network_devices.dart';
 
 const _kCoolUpDuration = Duration(milliseconds: 1000);
 
 class RoomPollingCommand extends CancelableCommand {
   bool _isPollingRooms = false;
+  Set<Room> _lastPollRooms = {};
+
   @override
   void cancel() {
     debugPrint('Stop Polling');
@@ -19,11 +22,21 @@ class RoomPollingCommand extends CancelableCommand {
 
     final devicesEither = await wifiDevices.devicesStream;
     return devicesEither.fold(left, (devices) async {
+      final _currentPollDevices = <Device>{};
+
       await for (final device in devices) {
+        _currentPollDevices.add(device);
         var deviceRoomsEither = await client.getRooms(device);
         deviceRoomsEither.fold(left, _rooms.addAll);
       }
-      return right(_rooms);
+
+      ///this happens because a bug in network_tools
+      ///in this case we just return the previous one
+      if (_currentPollDevices.isNotEmpty) {
+        _lastPollRooms = _rooms;
+      }
+
+      return right(_lastPollRooms);
     });
   }
 
