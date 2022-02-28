@@ -31,7 +31,7 @@ class CreateRoomCommand extends ICommand {
 
   @override
   Future<Either<Failure, OwnedRoom>> execute() async {
-    var device = await wifiDevices.currentDevice;
+    var device = await WifiNetworkDevices.currentDevice;
 
     ///we will create room in both cases so that it works with hotSpot devices
     return device.fold((l) => _createRoom(Device('0.0.0.0')), _createRoom);

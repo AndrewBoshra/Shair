@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/services/network_devices.dart';
 import 'package:shair/services/socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -12,7 +13,7 @@ class ShareFilesCommand extends ICommand {
   ShareFilesCommand(this.room, this.files);
   @override
   execute() async {
-    var deviceEither = await wifiDevices.currentDevice;
+    var deviceEither = await WifiNetworkDevices.currentDevice;
     deviceEither.fold((f) {
       RootNavigator.toWifiErrorScreen();
     }, (device) {

@@ -23,8 +23,7 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double> _btnAnimation;
   @override
   void initState() {
-    final devices = context.read<WifiNetworkDevices>();
-    devices.canCreateRoom.then((value) => setState(() {
+    WifiNetworkDevices.canCreateRoom.then((value) => setState(() {
           if (!value) _animationController.reverse();
         }));
 

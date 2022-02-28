@@ -9,5 +9,4 @@ abstract class AppGlobals {
   static final AppModel appModel = AppModel();
   static final server = RestServer(appModel);
   static final client = RestClient();
-  static final WifiNetworkDevices wifiDevices = WifiNetworkDevices();
 }

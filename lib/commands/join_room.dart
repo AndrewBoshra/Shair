@@ -48,7 +48,7 @@ class JoinRoomCommand extends ICommand {
       Dialogs.showJoinCodeDialog(context, idInRoom);
     }
 
-    final deviceEither = await wifiDevices.currentDevice;
+    final deviceEither = await WifiNetworkDevices.currentDevice;
 
     deviceEither.fold(left, (device) async {
       final askRes = await client.askToJoin(room, config, idInRoom, device.ip);

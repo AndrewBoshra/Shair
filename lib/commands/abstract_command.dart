@@ -12,13 +12,11 @@ abstract class ICommand {
   static RestServer get sServer => AppGlobals.server;
   static RestClient get sClient => AppGlobals.client;
   static Config get sConfig => AppGlobals.config;
-  static WifiNetworkDevices get sWifiDevices => AppGlobals.wifiDevices;
 
   Config get config => AppGlobals.config;
   AppModel get appModel => AppGlobals.appModel;
   RestServer get server => AppGlobals.server;
   RestClient get client => AppGlobals.client;
-  WifiNetworkDevices get wifiDevices => AppGlobals.wifiDevices;
 }
 
 abstract class CancelableCommand extends ICommand {

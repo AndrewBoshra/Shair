@@ -47,10 +47,10 @@ class Device {
   }
 }
 
-class WifiNetworkDevices {
+abstract class WifiNetworkDevices {
   // final Set<Device> _devices = {};
-  Future<bool> get canCreateRoom async => (await _myIp).isRight();
-  Future<Either<Failure, String>> get _myIp async {
+  static Future<bool> get canCreateRoom async => (await _myIp).isRight();
+  static Future<Either<Failure, String>> get _myIp async {
     try {
       final ip = await (NetworkInfo().getWifiIP());
       if (ip == null) {
@@ -68,7 +68,7 @@ class WifiNetworkDevices {
     }
   }
 
-  Future<Either<Failure, Stream<ActiveHost>>> get _hostStream async {
+  static Future<Either<Failure, Stream<ActiveHost>>> get _hostStream async {
     final ipEither = await _myIp;
     return ipEither.fold(left, (ip) async {
       final String subnet = ip.substring(0, ip.lastIndexOf('.'));
@@ -85,7 +85,7 @@ class WifiNetworkDevices {
     });
   }
 
-  Future<Either<Failure, Stream<Device>>> get devicesStream async {
+  static Future<Either<Failure, Stream<Device>>> get devicesStream async {
     final hostStream = await _hostStream;
     return hostStream.fold(left, (hostStream) {
       final devicesStream = hostStream.map((host) => Device(host.ip));
@@ -93,14 +93,14 @@ class WifiNetworkDevices {
     });
   }
 
-  Future<Either<Failure, List<Device>>> get devices async {
+  static Future<Either<Failure, List<Device>>> get devices async {
     final dStream = await devicesStream;
     return dStream.fold(left, (stream) async {
       return right(await stream.toList());
     });
   }
 
-  Future<Either<Failure, Device>> get currentDevice async {
+  static Future<Either<Failure, Device>> get currentDevice async {
     final ip = await _myIp;
     return ip.fold(left, (ip) => right(Device(ip)));
   }

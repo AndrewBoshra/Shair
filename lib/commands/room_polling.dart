@@ -20,7 +20,7 @@ class RoomPollingCommand extends CancelableCommand {
   Future<Either<Failure, Set<Room>>> _fetchRooms() async {
     var _rooms = <Room>{};
 
-    final devicesEither = await wifiDevices.devicesStream;
+    final devicesEither = await WifiNetworkDevices.devicesStream;
     return devicesEither.fold(left, (devices) async {
       final _currentPollDevices = <Device>{};
 

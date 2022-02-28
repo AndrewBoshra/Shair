@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:shair/commands/check_network.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/root_nav.dart';
+import 'package:shair/services/network_devices.dart';
 import 'package:shair/styled_components/app_bar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
@@ -50,7 +50,7 @@ class _NetworkErrorScreenState extends State<NetworkErrorScreen> {
                           setState(() {
                             _isLoading = true;
                           });
-                          if (await CheckNetworkStateCommand().execute()) {
+                          if (await WifiNetworkDevices.canCreateRoom) {
                             RootNavigator.pop();
                           }
 

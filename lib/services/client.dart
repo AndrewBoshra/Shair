@@ -37,7 +37,7 @@ class RestClient {
     String? code,
     String ip,
   ) async {
-    final currentDeviceEither = await AppGlobals.wifiDevices.currentDevice;
+    final currentDeviceEither = await WifiNetworkDevices.currentDevice;
     return currentDeviceEither.fold(left, (currentDevice) async {
       final res = await _api.post(
         '${room.owner.url}/room/${room.id}/join',
