@@ -396,7 +396,12 @@ class OwnedRoom extends JoinedRoom {
         'participants':
             activeParticipants.map((e) => e.toMap(includeUserCodes)).toList(),
     };
-    print(m);
     return m;
+  }
+
+  String generateUser() {
+    final code = Generator.uid;
+    add(code);
+    return code;
   }
 }

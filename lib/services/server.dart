@@ -220,6 +220,9 @@ class RestServer {
     );
   }
 
+  static String roomUrl(OwnedRoom room, String code) =>
+      '${room.owner.url}/${room.id}?code=$code';
+
   static String roomImageUrl(Device owner, String id) =>
       owner.url + _roomImageUrl.replaceAll('<id>', id);
   static const String _roomImageUrl = '/room/<id>/image';

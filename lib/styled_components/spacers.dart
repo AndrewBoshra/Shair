@@ -9,6 +9,7 @@ const _mediumHzSpacer = 20.0;
 const _largeHzSpacer = 40.0;
 
 abstract class Spacers {
+  static const kPaddingBig = 40.0;
   static const kPadding = 20.0;
   static const kPaddingSmall = 8.0;
 

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shair/commands/scan_code.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/config.dart';
 import 'package:shair/data/room.dart';
@@ -9,6 +12,7 @@ import 'package:shair/services/network_devices.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/spacers.dart';
 import 'package:shair/styled_components/styled_elevated_button.dart';
+import 'package:shair/widgets/rounded_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -206,6 +210,13 @@ class _HomeScreenState extends State<HomeScreen>
               text: 'New Room',
             ),
           ),
+          if (Platform.isAndroid || Platform.isIOS || Platform.isWindows) ...[
+            Spacers.smallSpacerHz(),
+            IconButton(
+              onPressed: () => ScanQrCommand(context).execute(),
+              icon: const Icon(Icons.qr_code),
+            )
+          ],
           const Spacer(flex: 50),
         ],
       ),

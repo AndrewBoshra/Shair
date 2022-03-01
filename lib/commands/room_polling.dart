@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
@@ -9,25 +11,30 @@ const _kCoolUpDuration = Duration(milliseconds: 3000);
 
 class RoomPollingCommand extends CancelableCommand {
   bool _isPollingRooms = false;
-  final Set<Device> _lastPollDevices = {};
-
+  StreamSubscription? _deviceStreamSub;
   @override
   void cancel() {
     debugPrint('Stop Polling');
+    _deviceStreamSub?.cancel();
     _isPollingRooms = false;
   }
 
   Future<Either<Failure, Set<Room>>> _fetchRooms() async {
     var _rooms = <Room>{};
 
-    final devicesEither = await WifiNetworkDevices.devices;
+    final devicesEither = await WifiNetworkDevices.devicesStream;
     return devicesEither.fold(left, (devices) async {
-      _lastPollDevices.addAll(devices);
-
-      for (final device in _lastPollDevices) {
+      _deviceStreamSub = devices.listen((device) async {
         var deviceRoomsEither = await client.getRooms(device);
-        deviceRoomsEither.fold(left, _rooms.addAll);
-      }
+
+        deviceRoomsEither.fold(left, (rooms) {
+          if (rooms.isNotEmpty) {
+            _rooms.addAll(rooms);
+            appModel.availableRooms = right(_rooms);
+          }
+        });
+      });
+      await _deviceStreamSub!.asFuture();
 
       return right(_rooms);
     });

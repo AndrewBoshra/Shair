@@ -1,13 +1,16 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shair/commands/leave_room.dart';
 
 import 'package:shair/commands/share_file.dart';
 import 'package:shair/data/app_theme.dart';
 import 'package:shair/data/room.dart';
+import 'package:shair/dialogs/show_dialog.dart';
 import 'package:shair/models/app_model.dart';
 import 'package:shair/screens/error.dart';
+import 'package:shair/services/server.dart';
 import 'package:shair/styled_components/avatar.dart';
 import 'package:shair/styled_components/room_file_tile.dart';
 import 'package:shair/styled_components/spacers.dart';
@@ -35,10 +38,23 @@ class RoomScreen extends StatelessWidget {
               ),
             ),
             Spacers.mediumSpacerHz(),
-            Text(room.name)
+            Flexible(
+              child: Text(
+                room.name,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
           ],
         ),
         actions: [
+          if (room.isOwned)
+            IconButton(
+              onPressed: () => _showQr(context, room as OwnedRoom),
+              icon: Icon(
+                Icons.qr_code_2_rounded,
+                color: appTheme.onPrimaryColor,
+              ),
+            ),
           if (!room.isOwned)
             IconButton(
               onPressed: () => LeaveRoomCommand(room, context).execute(),
@@ -93,5 +109,9 @@ class RoomScreen extends StatelessWidget {
           ),
         )
         .toList();
+  }
+
+  _showQr(BuildContext context, OwnedRoom room) {
+    Dialogs.showRoomQr(context, room);
   }
 }

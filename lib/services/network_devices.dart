@@ -74,7 +74,12 @@ abstract class WifiNetworkDevices {
       final String subnet = ip.substring(0, ip.lastIndexOf('.'));
       final scanner = lan_scanner.LanScanner();
 
-      final stream = scanner.icmpScan(subnet, scanThreads: 2);
+      final stream = scanner.icmpScan(
+        subnet,
+        scanThreads: 4,
+        progressCallback: print,
+        timeout: const Duration(seconds: 3),
+      );
       return right(
         stream.where((dev) => dev.ip != ip).map((dev) => Device(dev.ip)),
       );

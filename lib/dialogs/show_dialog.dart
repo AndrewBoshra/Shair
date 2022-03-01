@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shair/actions/actions.dart';
+import 'package:shair/data/room.dart';
 import 'package:shair/dialogs/dialogs.dart';
+import 'package:shair/services/server.dart';
 
 abstract class Dialogs {
   static Future<T?> show<T>(BuildContext context, Widget dialog,
@@ -15,4 +18,11 @@ abstract class Dialogs {
   static Future showJoinRequestDialog(
           BuildContext context, JoinRequest request) =>
       show(context, JoinRequestDialog(request: request));
+  static Future showRoomQr(BuildContext context, OwnedRoom room) => show(
+      context,
+      QRCodeDialog(data: RestServer.roomUrl(room, room.generateUser())));
+  static Future<Barcode?> showQrScanner(BuildContext context) => show(
+        context,
+        const QrScanner(),
+      );
 }
