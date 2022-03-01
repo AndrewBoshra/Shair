@@ -36,12 +36,12 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^2.3.1
+  lan_scanner: ^3.3.0
   liquid_progress_indicator: ^0.4.0
   lottie: ^1.2.1
   mime: ^1.0.1
   multiple_stream_builder: ^2.0.0
   network_info_plus: ^2.1.2
-  network_tools: ^1.0.8
   open_file: ^3.2.1
   path_provider: ^2.0.8
   permission_handler: ^9.2.0

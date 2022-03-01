@@ -28,6 +28,7 @@ class RestClient {
       final room = Room.fromMap(raw, owner: device);
       rooms.add(room);
     }
+    print('found ${rooms.length} in ${device.ip}');
     return right(rooms);
   }
 

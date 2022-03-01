@@ -5,11 +5,11 @@ import 'package:shair/core/failures.dart';
 import 'package:shair/data/room.dart';
 import 'package:shair/services/network_devices.dart';
 
-const _kCoolUpDuration = Duration(milliseconds: 1000);
+const _kCoolUpDuration = Duration(milliseconds: 3000);
 
 class RoomPollingCommand extends CancelableCommand {
   bool _isPollingRooms = false;
-  Set<Room> _lastPollRooms = {};
+  final Set<Device> _lastPollDevices = {};
 
   @override
   void cancel() {
@@ -20,23 +20,16 @@ class RoomPollingCommand extends CancelableCommand {
   Future<Either<Failure, Set<Room>>> _fetchRooms() async {
     var _rooms = <Room>{};
 
-    final devicesEither = await WifiNetworkDevices.devicesStream;
+    final devicesEither = await WifiNetworkDevices.devices;
     return devicesEither.fold(left, (devices) async {
-      final _currentPollDevices = <Device>{};
+      _lastPollDevices.addAll(devices);
 
-      await for (final device in devices) {
-        _currentPollDevices.add(device);
+      for (final device in _lastPollDevices) {
         var deviceRoomsEither = await client.getRooms(device);
         deviceRoomsEither.fold(left, _rooms.addAll);
       }
 
-      ///this happens because a bug in network_tools
-      ///in this case we just return the previous one
-      if (_currentPollDevices.isNotEmpty) {
-        _lastPollRooms = _rooms;
-      }
-
-      return right(_lastPollRooms);
+      return right(_rooms);
     });
   }
 
@@ -49,11 +42,9 @@ class RoomPollingCommand extends CancelableCommand {
     appModel.availableRooms = await _fetchRooms();
 
     Future.doWhile(() async {
-      final rooms = _fetchRooms();
-      final futures =
-          await Future.wait([rooms, Future.delayed(_kCoolUpDuration)]);
-
-      appModel.availableRooms = futures.first;
+      await Future.delayed(_kCoolUpDuration);
+      final rooms = await _fetchRooms();
+      appModel.availableRooms = rooms;
       debugPrint('finished _fetchRooms');
       return _isPollingRooms;
     });

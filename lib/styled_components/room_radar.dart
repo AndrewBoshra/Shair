@@ -348,7 +348,7 @@ class _RoomsRadarState extends State<RoomsRadar>
     _appModel = context.read<AppModel>();
     RoomPollingCommand().execute();
     bool _isInErrorState = false;
-    _appModel.addListener(() {
+    _appModel.addListener(() async {
       _appModel.availableRooms.fold(
         (f) async {
           //error
@@ -415,7 +415,7 @@ class BallWidget extends StatefulWidget {
 class _BallWidgetState extends State<BallWidget>
     with SingleTickerProviderStateMixin {
   late final _animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 2000));
+      vsync: this, duration: const Duration(milliseconds: 500));
   late final _animation =
       CurvedAnimation(parent: _animationController, curve: Curves.bounceIn);
   @override

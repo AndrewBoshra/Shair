@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
@@ -14,9 +15,7 @@ class ShareFilesCommand extends ICommand {
   @override
   execute() async {
     var deviceEither = await WifiNetworkDevices.currentDevice;
-    deviceEither.fold((f) {
-      RootNavigator.toWifiErrorScreen();
-    }, (device) {
+    deviceEither.fold(left, (device) {
       final roomUrl = device.url + '/room/${room.id}/files/';
 
       final dFiles = files.map(

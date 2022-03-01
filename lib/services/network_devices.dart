@@ -4,10 +4,10 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:network_info_plus/network_info_plus.dart';
-import 'package:network_tools/network_tools.dart';
 import 'package:shair/core/failures.dart';
 import 'package:shair/services/server.dart';
 import 'package:shair/utils/utils.dart';
+import 'package:lan_scanner/lan_scanner.dart' as lan_scanner;
 
 const kPort = 4560;
 
@@ -53,7 +53,7 @@ abstract class WifiNetworkDevices {
   static Future<Either<Failure, String>> get _myIp async {
     try {
       final ip = await (NetworkInfo().getWifiIP());
-      if (ip == null) {
+      if (ip == null || ip == '') {
         throw PlatformException(
           message: 'Couldn\'t get device ip',
           code: '5023',
@@ -68,28 +68,16 @@ abstract class WifiNetworkDevices {
     }
   }
 
-  static Future<Either<Failure, Stream<ActiveHost>>> get _hostStream async {
+  static Future<Either<Failure, Stream<Device>>> get devicesStream async {
     final ipEither = await _myIp;
     return ipEither.fold(left, (ip) async {
       final String subnet = ip.substring(0, ip.lastIndexOf('.'));
-      final myIpLast = int.parse(ip.split('.').last);
-      final searchStart = myIpLast - 255;
-      final searchEnd = myIpLast + 255;
-      final stream = HostScanner.discover(
-        subnet,
-        firstSubnet: searchStart.clamp(1, 255),
-        lastSubnet: searchEnd.clamp(1, 255),
-        progressCallback: (progress) {},
-      );
-      return right(stream.where((host) => host.ip != ip));
-    });
-  }
+      final scanner = lan_scanner.LanScanner();
 
-  static Future<Either<Failure, Stream<Device>>> get devicesStream async {
-    final hostStream = await _hostStream;
-    return hostStream.fold(left, (hostStream) {
-      final devicesStream = hostStream.map((host) => Device(host.ip));
-      return right(devicesStream);
+      final stream = scanner.icmpScan(subnet, scanThreads: 2);
+      return right(
+        stream.where((dev) => dev.ip != ip).map((dev) => Device(dev.ip)),
+      );
     });
   }
 
