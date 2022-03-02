@@ -8,7 +8,7 @@ class ScanQrCommand extends ICommand {
 
   ScanQrCommand(this.context);
   @override
-  execute() {
-    Dialogs.showQrScanner(context);
+  execute() async {
+    await Dialogs.showQrScanner(context);
   }
 }

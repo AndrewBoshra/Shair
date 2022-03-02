@@ -144,34 +144,34 @@ class QrScanner extends StatefulWidget {
 class _QrScannerState extends State<QrScanner> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  // In order to get hot reload to work we need to pause the camera if the platform
-  // is android, or resume the camera if the platform is iOS.
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller!.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller!.resumeCamera();
-    }
-  }
+  // // In order to get hot reload to work we need to pause the camera if the platform
+  // // is android, or resume the camera if the platform is iOS.
+  // @override
+  // void reassemble() {
+  //   super.reassemble();
+  //   if (Platform.isAndroid) {
+  //     controller!.pauseCamera();
+  //   } else if (Platform.isIOS) {
+  //     controller!.resumeCamera();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return QRView(
-      key: qrKey,
-      onQRViewCreated: _onQRViewCreated,
+    return Dialog(
+      child: QRView(
+        key: qrKey,
+        onQRViewCreated: _onQRViewCreated,
+      ),
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
+  void _onQRViewCreated(QRViewController controller) async {
     this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      print(scanData);
-      // setState(() {
-      //   result = scanData;
-      // });
-    });
+    final scanData = await controller.scannedDataStream.first;
+    print(scanData.code);
+    controller.stopCamera();
+    Navigator.of(context).pop(scanData.code);
   }
 
   @override

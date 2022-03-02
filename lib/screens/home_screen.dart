@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen>
               text: 'New Room',
             ),
           ),
-          if (Platform.isAndroid || Platform.isIOS || Platform.isWindows) ...[
+          if (Platform.isAndroid || Platform.isIOS) ...[
             Spacers.smallSpacerHz(),
             IconButton(
               onPressed: () => ScanQrCommand(context).execute(),
