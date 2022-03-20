@@ -1,17 +1,36 @@
 # Shair
 
 A File Sharing Application
+# ScreenShots
+## First time using the app
 
-![first_screen](https://github.com/AndrewBoshra/Shair/blob/main/screenshots/(1).jpg?raw=true)
-## Getting Started
+<p float="left">
+  <img src="/screenshots/%20(6).png" width="300" />
+  <img src="/screenshots/%20(1).png" width="300" /> 
+  <img src="/screenshots/%20(2).png" width="300" />
+</p>
 
-This project is a starting point for a Flutter application.
+## Creating a room
 
-A few resources to get you started if this is your first Flutter project:
+<p float="left">
+  <img src="/screenshots/%20(3).png" width="300" />
+</p>
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Rooms Radar
+
+<p float="left">
+  <img src="/screenshots/%20(1).jpg" width="300" />
+</p>
+
+
+## Joining a Room
+
+ On Owner's Device | On Joiner Device
+ ------------------|-----------------
+ <img src="/screenshots/%20(4).png" width="300" /> | <img src="/screenshots/%20(2).jpg" width="300" />
+ 
+ 
+## Room Screen
+![room 1 ](screenshots/%20(5).png)
+
