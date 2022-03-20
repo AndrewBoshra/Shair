@@ -2,7 +2,7 @@
 
 A File Sharing Application
 
-
+![first_screen](https://github.com/AndrewBoshra/Shair/blob/main/screenshots/(1).jpg?raw=true)
 ## Getting Started
 
 This project is a starting point for a Flutter application.
