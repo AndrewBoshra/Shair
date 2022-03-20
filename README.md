@@ -1,6 +1,7 @@
-# shair
+# Shair
 
-A new Flutter project.
+A File Sharing Application
+
 
 ## Getting Started
 
