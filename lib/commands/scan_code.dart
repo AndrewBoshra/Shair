@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shair/commands/abstract_command.dart';
-import 'package:shair/dialogs/show_dialog.dart';
+import 'package:shair/screens/qr_code.dart';
 
 class ScanQrCommand extends ICommand {
   final BuildContext context;
@@ -9,6 +9,10 @@ class ScanQrCommand extends ICommand {
   ScanQrCommand(this.context);
   @override
   execute() async {
-    await Dialogs.showQrScanner(context);
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => const QrScanner(),
+    ));
+
+    // client.join(room)
   }
 }

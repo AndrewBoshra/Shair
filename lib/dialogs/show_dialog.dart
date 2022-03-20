@@ -22,9 +22,4 @@ abstract class Dialogs {
   static Future showRoomQr(BuildContext context, OwnedRoom room) => show(
       context,
       QRCodeDialog(data: RestServer.roomUrl(room, room.generateUser())));
-
-  static Future<Barcode?> showQrScanner(BuildContext context) => show(
-        context,
-        const QrScanner(),
-      );
 }
